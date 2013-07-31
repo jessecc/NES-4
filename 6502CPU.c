@@ -573,3 +573,108 @@ static void IncrementMemAbs( )
    BYTE data = ReadByte( dataAddr );
    WriteByte( dataAddr, data++ );
 }
+
+static void IncrementMemAbsIndex( )
+{
+   WORD dataAddr = ReadWord( ProgramCounter );
+   BYTE data = ReadByte( dataAddr );
+   WriteByte( dataAddr, data++ );
+}
+
+static void IncrementX( )
+{
+   XReg++;
+}
+
+static void IncrementY( )
+{
+   YReg++;
+}
+
+static void JumpAbs( )
+{
+   ProgramCounter = ReadWord( ProgramCounter );
+}
+
+static void JumpInd( )
+{
+   ProgramCounter = ReadWord( ReadWord( ProgramCounter ) );
+}
+
+static void JumpSubroutine( )
+{
+   StackPush( ( ProgramCounter >> 8 ) & 0xFF );
+   StackPush( ProgramCounter & 0xFF );
+   ProgramCounter = ReadWord( ProgramCounter );
+}
+
+#define STACK_ADDR( reg )        0x100 + reg
+
+static void StackPush( BYTE data )
+{
+   WriteByte( STACK_ADDR( StackPointer ), data );
+   StackPointer--;
+}
+
+static void StackPop( BYTE* data )
+{
+   *data = ReadByte( STACK_ADDR( StackPointer ) );
+   StackPointer++;
+}
+
+static void LoadAccImm( )
+{
+   LoadAccBase( ReadByte( ProgramCounter++ ) );
+}
+
+static void LoadAccZp( )
+{
+   WORD dataAddr = ReadByte( ProgramCounter++ );
+   LoadAccBase( ReadByte( dataAddr ) );
+}
+
+static void LoadAccZpIndex( )
+{
+   WORD dataAddr = ReadByte( ProgramCounter++ ) + XReg;
+   LoadAccBase( ReadByte( dataAddr ) );
+}
+
+static void LoadAccAbs( )
+{
+   WORD dataAddr = ReadWord( ProgramCounter );
+   LoadAccBase( ReadByte( dataAddr ) );
+   ProgramCounter += 2;
+}
+
+static void LoadAccAbsIndexX( )
+{
+   WORD dataAddr = ReadWord( ProgramCounter ) + XReg;
+   LoadAccBase( ReadByte( dataAddr ) );
+   ProgramCounter += 2;
+}
+
+static void LoadAccAbsIndexY( )
+{
+   WORD dataAddr = ReadWord( ProgramCoutner ) + YReg;
+   LoadAccBase( ReadByte( dataAddr ) );
+   ProgramCounter += 2;
+}
+
+static void LoadAccIndexInd( )
+{
+   WORD dataAddr = ReadWord( ReadByte( ProgramCounter++ ) + XReg );
+   LoadAccBase( ReadByte( dataAddr ) );
+}
+
+static void LoadAccIndIndex( )
+{
+   WORD dataAddr = ReadWord( ReadByte( ProgramCounter++ ) ) + YReg;
+   LoadAccBase( ReadByte( dataAddr ) );
+}
+
+static void LoadAccBase( BYTE data )
+{
+   StatusZero = ( data ) ? 0 : 1;
+   StatusNeg = ( data & 0x80 ) ? 1 : 0;
+   Accumulator = data;
+}

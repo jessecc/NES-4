@@ -134,6 +134,8 @@ static void JumpAbs( );                   /*JMP 0x1234   - PC = 0x1234*/
 static void JumpInd( );                   /*JMP [0x1234] - PC = [0x1234]*/
 /*JSR - Jump to Subroutine*/
 static void JumpSubroutine( );            /*JSR 0x1234   - SP = SP - 2; [SP] = PC; PC = 0x1234*/
+static void StackPush( BYTE data );
+static void StackPop( BYTE* data );
 /*LDA - Load Accumulator with Memory*/
 static void LoadAccImm( );                /*LDA #$12     - A = 0x12*/
 static void LoadAccZp( );                 /*LDA 0x12     - A = [0x0012]*/
@@ -142,6 +144,7 @@ static void LoadAccAbs( );                /*LDA 0x1234   - A = [0x1234]*/
 static void LoadAccAbsIndex( );           /*LDA 0x1234,X - A = [0x1234 + X]*/
 static void LoadAccIndexInd( );           /*LDA (0x12,X) - A = [[0x0012 + X]]*/
 static void LoadAccIndIndex( );           /*LDA (0x12),Y - A = [[0x0012] + Y]*/
+static void LoadAccBase( BYTE data );
 /*LDX - Load X index with Memory*/
 static void LoadXImm( );                  /*LDX #$12     - X = 0x12*/
 static void LoadXZp( );                   /*LDX 0x12     - X = [0x0012]*/
