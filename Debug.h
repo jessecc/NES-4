@@ -29,6 +29,16 @@
 #define CMD_STR_9				"quit"
 #define CMD_STR_10				"ni"
 
+typedef struct
+{
+	struct breakpoint_t* next;
+	WORD address;
+	BYTE number;
+}breakpoint_t;
+
+breakpoint_t* breakpointList;
+breakpoint_t* lastbreakpoint;
+
 /*This is the main function that will be called by the emulator*/
 void Debug( );
 /*EnableBreakpoint takes a memory location and return a breakpoint number*/
@@ -45,4 +55,6 @@ static char* _ReadLine( );
 static DWORD _ParseLine( );
 static DWORD EditRegister( BYTE reg, WORD val );
 static DWORD EditMemory( WORD addr, BYTE data );
+static breakpoint_t* _MakeBreakPoint( breakpoint_t* next, WORD addr, BYTE num );
+static void _DeleteBreakPoint( breakpoint_t* bp );
 #endif
