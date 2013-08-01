@@ -1,6 +1,7 @@
 #ifndef __6502_EMU_H_
 #define __6502_EMU_H_
 
+#include "GenericTypes.h"
 BYTE* ram = NULL;
 DWORD ramSize;
 static DWORD debugEnable;
