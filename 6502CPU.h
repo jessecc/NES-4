@@ -8,19 +8,19 @@
 #define RST_LEVEL			0x03
 #define ABT_LEVEL			0x04
 
-static 6502Reg8		Accumulator;
-static 6502Reg8		XReg;
-static 6502Reg8		YReg;
-static 6502Reg8		StackPointer;
-static 6502Reg8		StatusZero;
-static 6502Reg8      StatusCarry;
-static 6502Reg8      StatusNeg;
-static 6502Reg8      StatusInt;
-static 6502Reg8      StatusDec;
-static 6502Reg8      StatusOverflow;
-static 6502Reg8      StatusB;
-static 6502Reg8      StatusUnk;
-static 6502Reg16	   ProgramCounter;
+6502Reg8		Accumulator;
+6502Reg8		XReg;
+6502Reg8		YReg;
+6502Reg8		StackPointer;
+6502Reg8		StatusZero;
+6502Reg8      StatusCarry;
+6502Reg8      StatusNeg;
+6502Reg8      StatusInt;
+6502Reg8      StatusDec;
+6502Reg8      StatusOverflow;
+6502Reg8      StatusB;
+6502Reg8      StatusUnk;
+6502Reg16	   ProgramCounter;
 BYTE				InterruptType;
 
 unsigned int 6502CPUInit( unsigned char* ramPtr );
@@ -28,6 +28,41 @@ void 6502CPUFetch( unsigned char* opcode );
 void 6502CPUDecode( unsigned char opcode, short* funcIndex );
 void 6502CPUExecute( unsigned char opcode );
 void 6502Interrupt( );
+
+/*Undocumented ones*/
+/*Fuck the Undocumented opcodes for now.  I am going to have to do some more reasearch on that for now*/
+/*
+//AAC
+static void AACImm( );
+//AAX
+static void AAXZp( );
+static void AAXZpIndexY( );
+static void AAXIndexInd( );
+static void AAXAbs( );
+//ARR
+static void ARPImm( );
+//ASR
+static void ASRImm( );
+//ATX
+static void ATXImm( );
+//AXA
+static void AXAAbsIndexY( );
+static void AXAIndIndex( );
+//AXS
+static void AXSImm( );
+//DCP
+static void DCPZp( );
+static void DCPZpIndex( );
+static void DCPAbs( );
+static void DCPAbsIndexX( );
+static void DCPAbsIndexY( );
+static void DCPIndexInd( );
+static void DCPIndIndex( );
+//DOP
+static void DOP( );
+*/
+static void UndocOp( );
+static void Jam( );
 /*ADC - Add Memory with Accumulator with Carry*/
 static void AddCarryImm( );					/*ADC #$12	 	- A = A + 0x12*/
 static void AddCarryZp( );				   	/*ADC 0x12		- A = A + [0x0012] Prepends an 0x00 to create a 16 bit address*/

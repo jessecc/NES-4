@@ -36,6 +36,7 @@ unsigned int EmulationInit( struct *arg_s args )
 		/*We don't need to set an error here because the 6502CPUInit function will have done this already*/
 		return 1;
 	}
+	args->debugEnable = debugEnable;
 	/*In case of Video or other peripherial devices do a start up for them too*/
 	/*return on error*/
 	return ERROR_SUCCESS;
@@ -56,12 +57,17 @@ void EmulationStart( )
 			/*Get the number of cycles this opcode requires*/
 			/*Subtract this from cycles left*/
 			cyclesLeft -= cycleTable[opcode];
+			/*Where does this get enabled?*/
+			if( debugEnable )
+			{
+				Debug( );
+			}
 			6502CPUExecute( opcode );
 			/*Check to see if the opcode executed was CLI.  If so then break out of this loop*/
-         if( opcode == 0x58 )
-         {
-            break;
-         }
+			if( opcode == 0x58 )
+			{
+				break;
+			}
 		}
 		/*This is where we will check for interupts and the like*/
 		/*What they are and when they will occur I have no idea on either account.  But something may happen with them here*/

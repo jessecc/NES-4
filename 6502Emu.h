@@ -3,6 +3,7 @@
 
 BYTE* ram = NULL;
 DWORD ramSize;
+static DWORD debugEnable;
 
 unsigned int EmulationInit( struct *arg_s );
 void EmulationStart();

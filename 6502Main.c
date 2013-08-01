@@ -6,11 +6,13 @@
 /*Local Includes*/
 #include "Error.h"
 #include "6502Emu.h"
+#include "GenericTypes.h"
 
 struct arg_s
 {
 	/*Do stuff here*/
 	unsigned int ramSize;
+	DWORD debugEnable;
 };
 
 void Usage( char** argv )
