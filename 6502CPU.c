@@ -329,8 +329,11 @@ static void BranchNotNegative( )
 
 static void Break( )
 {
-	ProgramCounter = ReadWord( 0xFFFE );
+	StackPush( ( ProgramCounter >> 8 ) & 0xFF );
+	StackPush( ProgramCounter & 0xFF );
 	StatusB = 1;
+	StackPush( ( StatusNeg << 7 ) | ( StatusOverflow << 6 ) | ( 1 << 5 ) | ( StatusB << 4 ) | ( StatusDecimal << 3 ) | ( StatusInterrupt << 2 ) | ( StatusZero << 1 ) | StatusCarry );
+	ProgramCounter = ReadWord( 0xFFFE );
 	StatusInt = 1;
 }
 
@@ -677,4 +680,445 @@ static void LoadAccBase( BYTE data )
    StatusZero = ( data ) ? 0 : 1;
    StatusNeg = ( data & 0x80 ) ? 1 : 0;
    Accumulator = data;
+}
+
+static void LoadXImm( )
+{
+	LoadXBase( ReadByte( ProgramCounter++ ) );
+}
+
+static void LoadXZp( )
+{
+	LoadXBase( ReadByte( ReadByte( ProgramCounter++ ) ) );
+}
+
+static void LoadXZpIndex( ) 
+{
+	LoadXBase( ReadByte( ReadByte( ProgramCounter++ ) + YReg ) );
+}
+
+static void LoadXAbs( )
+{
+	LoadXBase( ReadByte( ReadWord( ProgramCounter ) ) );
+	ProgramCounter += 2;
+}
+
+static void LoadXAbsIndex( )
+{
+	LoadXBase( ReadByte( ReadWord( ProgramCounter ) + YReg ) );
+	ProgramCounter += 2;
+}
+
+static void LoadXBase( BYTE data )
+{
+	StatusZero = ( data ) ? 0 : 1;
+	StatusNeg = ( data & 0x80 ) ? 1 : 0;
+	XReg = data;
+}
+
+static void LoadYImm( )
+{
+	LoadYBase( ReadByte( ProgramCounter++ ) );
+}
+
+static void LoadYZp( )
+{
+	LoadYBase( ReadByte( ReadByte( ProgramCounter++ ) ) );
+}
+
+static void LoadYZpIndex( )
+{
+	LoadYBase( ReadByte( ReadByte( ProgramCounter++ ) + XReg ) );
+}
+
+static void LoadYAbs( )
+{
+	LoadYBase( ReadByte( ReadWord( ProgramCounter ) ) );
+	ProgramCounter += 2;
+}
+
+static void LoadYAbsIndex( )
+{
+	LoadYBase( ReadBYte( ReadWord( ProgramCounter ) + XReg ) );
+	ProgramCounter += 2;
+}
+
+static void LoadYBase( BYTE data )
+{
+	StatusZero = ( data ) ? 0 : 1;
+	StatusNeg = ( data & 0x80 ) ? 1 : 0;
+	YReg = data;
+}
+
+static void NoOperation( )
+{
+	/*All this does is increment the program counter*/
+	ProgramCounter++;
+}
+
+static void OrAccMemImm( )
+{
+	OrAccMemBase( ReadByte( ProgramCounter++ ) );
+}
+
+static void OrAccMemZp( )
+{
+	OrAccMemBase( ReadByte( ReadByte( ProgramCounter++ ) ) );
+}
+
+static void OrAccMemZpIndex( )
+{
+	OrAccMemBase( ReadByte( ReadByte( ProgramCounte++ ) + XReg ) );
+}
+
+static void OrAccMemAbs( )
+{
+	OrAccMemBase( ReadByte( ReadWord( ProgramCounter ) ) );
+	ProgramCounter += 2;
+}
+
+static void OrAccMemAbsIndex( )
+{
+	OrAccMemBase( ReadByte( ReadWord( ProgramCounter ) + XReg ) );
+	ProgramCounter += 2;
+}
+
+static void OrAccMemIndexInd( )
+{
+	OrAccMemBase( ReadByte( ReadWord( ReadByte( ProgramCounter++ ) + XReg ) ) );
+}
+
+static void OrAccMemIndIndex( )
+{
+	OrAccMemBase( ReadByte( ReadWord( ReadByte( ProgramCounter++ ) ) + YReg ) );
+}
+
+static void OrAccMemBase( BYTE data )
+{
+	BYTE tmp = data | Accumulator;
+	StatusNeg = ( tmp & 0x80 ) ? 1 : 0;
+	StatusZero = ( tmp ) ? 0 : 1;
+	Accumulator = tmp;
+}
+
+static void PushAcc( )
+{
+	StackPush( Accumulator );
+	ProgramCounter++;
+}
+
+static void PushProgamCounter( )
+{
+	StackPush( ( ProgramCounter >> 8 ) & 0xFF );
+	StackPush( ProgramCounter & 0xFF );
+	ProgramCounter++;
+}
+
+static void PopAcc( )
+{
+	StackPop( &Accumulator );
+	ProgramCounter++;
+}
+
+static void PopProgramCounter( )
+{
+	StackPop( (BYTE*)&ProgramCounter );
+	StackPop( (BYTE*)&(ProgramCounter+1) );
+}
+
+static void RotateLeftAcc( )
+{
+	WORD tmp = Accumulator << 1;
+	tmp |= ( StatusCarry ) ? 1 : 0;
+	StatusCarry = ( tmp > 0xFF ) ? 1 : 0;
+	tmp &= 0xFF;
+	StatusNeg = ( tmp & 0x80 ) ? 1 : 0;
+	StatusZero = ( tmp ) ? 0 : 1;
+	Accumulator = tmp;
+	ProgramCounter++;
+}
+
+static void RotateLeftZp( )
+{
+	WORD dataAddr = ReadByte( ProgramCounter++ );
+	RotateLeftBase( dataAddr, ReadByte( dataAddr ) );
+}
+
+static void RotateLeftZpIndex( )
+{
+	WORD dataAddr = ReadByte( ProgramCounter++ ) + XReg;
+	RotateLeftBase( dataAddr, ReadByte( dataAddr ) );
+}
+
+static void RotateLeftAbs( )
+{
+	WORD dataAddr = ReadWord( ProgramCounter );
+	RotateLeftBase( dataAddr, ReadByte( dataAddr ) );
+	ProgramCounter += 2;
+}
+
+static void RotateLeftAbsIndex( )
+{
+	WORD dataAddr = ReadWord( ProgramCounter ) + XReg;
+	RotateLeftBase( dataAddr, ReadByte( dataAddr ) );
+	ProgramCounter += 2;
+}
+
+static void RotateLeftBase( WORD dataAddr, BYTE data )
+{
+	WORD tmp = data << 1;
+	tmp |= ( StatusCarry ) ? 1 : 0;
+	StatusCarry = ( tmp > 0xFF ) ? 1 : 0;
+	tmp &= 0xFF;
+	StatusNeg = ( tmp & 0x80 ) ? 1 : 0;
+	StatusZero = ( tmp ) ? 0 : 1;
+	WriteByte( dataAddr, tmp );
+}
+
+static void RotateRightAcc( ) 
+{
+	WORD tmp = Accumulator | ( StatusCarry ) ? 0x100 : 0;
+	StatusCarry = ( tmp & 0x1 ) ? 1 : 0;
+	tmp >>= 1;
+	StatusNeg = ( tmp & 0x80 ) ? 1 : 0;
+	StatusZero = ( tmp ) ? 0 : 1;
+	Accumuator = tmp;
+	ProgramCounter++;
+}
+
+static void RotateRightZp( )
+{
+	WORD dataAddr = ReadByte( ProgramCounter++ );
+	RotateRightBase( dataAddr, ReadByte( dataAddr ) );
+}
+
+static void RotateRightZpIndex( )
+{
+	WORD dataAddr = ReadByte( ProgramCounter++ ) + XReg;
+	RotateRightBase( dataAddr, ReadByte( dataAddr ) );
+}
+
+static void RotateRightAbs( )
+{
+	WORD dataAddr = ReadWord( ProgramCounter );
+	RotateRightBase( dataAddr, ReadByte( dataAddr ) );
+	ProgramCounter += 2;
+}
+
+static void RotateRightAbsIndex( )
+{
+	WORD dataAddr = ReadWord( ProgramCounter ) + XReg;
+	RotateRightBase( dataAddr, ReadByte( dataAddr ) );
+	ProgramCounter += 2;
+}
+
+static void RotateRightBase( WORD dataAddr, BYTE data )
+{
+	WORD tmp = data | ( StatusCarry ) ? 0x100 : 0;
+	StatusCarry = ( tmp & 0x1 ) ? 1 : 0;
+	tmp >>= 1;
+	StatusNeg = ( tmp & 0x80 ) ? 1 : 0;
+	StatusZero = ( tmp ) ? 0 : 1;
+	WriteByte( dataAddr, tmp );
+}
+
+static void ReturnInterrupt( )
+{
+	BYTE sr;
+	StackPop( &sr );
+	StatusNeg = ( sr & 0x80 ) >> 7;
+	StatusOverflow = ( sr & 0x40 ) >> 6;
+	StatusUnk = ( sr & 20 ) >> 5;
+	StatusB = ( sr & 0x10 ) >> 4;
+	StatusDec = ( sr & 0x8 ) >> 3;
+	StatusInt = ( sr & 0x4 ) >> 2;
+	StatusZero = ( sr & 0x2 ) >> 1;
+	StatusCarry = ( sr & 0x1 );
+	StackPop( (BYTE*)&(ProgramCounter+1) );
+	StackPop( (BYTE*)&ProgramCounter );
+}
+
+static void ReturnSubroutine( )
+{
+	BYTE hi, lo;
+	StackPop( &lo );
+	StackPop( &hi );
+	ProgramCounter = ( hi << 8 ) + lo;		/*Is adding one needed?  What did we push onto the stack?*/
+}
+
+static void SubtractAccMemImm( )
+{
+	SubtractAccMemBase( ReadByte( ProgramCounter++ ) );
+}
+
+static void SubtractAccMemZp( )
+{
+	SubtractAccMemBase( ReadByte( ReadByte( ProgramCounter++ ) ) );
+}
+
+static void SubtractAccMemZpIndex( )
+{
+	SubtractAccMemBase( ReadByte( ReadByte( ProgramCounter++ ) + XReg ) );
+}
+
+static void SubtractAccMemAbs( )
+{
+	SubtractAccMemBase( ReadByte( ReadWord( ProgramCounter ) ) );
+	ProgramCounter += 2;
+}
+
+static void SubtractAccMemAbsIndex( )
+{
+	SubtractAccMemBase( ReadByte( ReadWord( ProgramCounter ) + XReg ) );
+	ProgramCounter += 2;
+}
+
+static void SubtractAccMemIndexInd( )
+{
+	SubtractAccMemBase( ReadByte( ReadWord( ReadByte( ProgramCounter++ ) + XReg ) ) );
+}
+
+static void SubtractAccMemIndIndex( )
+{
+	SubtractAccMemBase( ReadByte( ReadWord( ReadByte( ProgramCounter++ ) ) + YReg ) );
+}
+
+static void SubtractAccMemBase( BYTE data )
+{
+	WORD tmp = Accumulator - data - StatusCarry;
+	StatusNeg = ( tmp & 0x80 ) ? 1 : 0;
+	StatusZero = ( tmp ) ? 0 : 1;
+	StatusOverflow = ( ((AC ^ temp) & 0x80) && ((AC ^ data) & 0x80) ) ? 1 : 0;		/*I hate this thing*/
+	if( StatusDec )
+	{
+		/*Whatever*/
+	}
+	StatusCarry = ( tmp < 0x100 ) ? 1 : 0;
+	Accumulator = tmp & 0xFF;
+}
+
+static void SetCarry( )
+{
+	StatusCarry = 1;
+	ProgramCounter++;
+}
+
+static void SetDecimal( )
+{
+	StatusDec = 1;
+	ProgramCounter++;
+}
+
+static void SetInterruptDisable( )
+{
+	StatusInt = 1;
+	ProgramCounter++;
+}
+
+static void StoreAccZp( )
+{
+	WriteByte( ReadByte( ProgramCounter++ ), Accumulator );
+}
+
+static void StoreAccZpIndex( )
+{
+	WriteByte( ReadByte( ProgramCounter++ ) + XReg, Accumulator );
+}
+
+static void StoreAccAbs( )
+{
+	WriteByte( ReadWord( ProgramCounter ), Accumulator );
+	ProgramCounter += 2;
+}
+
+static void StoreAccAbsIndexX( )
+{
+	WriteByte( ReadWord( ProgramCounter ) + XReg, Accumulator );
+	ProgramCounter += 2;
+}
+
+static void StoreAccAbsIndexY( )
+{
+	WriteByte( ReadWord( ProgramCounter ) + YReg, Accumulator );
+	ProgramCounter += 2;
+}
+
+static void StoreAccIndexInd( )
+{
+	WriteByte( ReadWord( ReadByte( ProgramCounter++ ) + XReg ), Accumulator );
+}
+
+static void StoreAccIndIndex( )
+{
+	WriteByte( ReadWord( ReadByte( ProgramCounter++ ) ) + YReg, Accumulator );
+}
+
+static void StoreXZp( )
+{
+	WriteByte( ReadByte( ProgramCounter++ ), XReg );
+}
+
+static void StoreXZpIndex( )
+{
+	WriteByte( ReadByte( ProgramCounter++ ) + YReg, XReg );
+}
+
+static void StoreXAbs( )
+{
+	WriteByte( ReadWord( ProgramCounter ), XReg );
+	ProgramCounter += 2;
+}
+
+static void StoreYZp( )
+{
+	WriteByte( ReadByte( ProgramCounter++ ), YReg );
+}
+
+static void StoreYZpIndex( )
+{
+	WriteByte( ReadByte( ProgramCounter++ ) + XReg, YReg );
+}
+
+static void StoreYAbs( )
+{
+	WriteByte( ReadWord( ProgramCounter ), YReg );
+	ProgramCounter += 2;
+}
+
+static void TransferAccToX( )
+{
+	TransferBase( &XReg, Accumulator );
+}
+
+static void TransferAccToY( )
+{
+	TransferBase( &YReg, Accumulator );
+}
+
+static void TransferStackToX( )
+{
+	TransferBase( &XReg, StackPointer );
+}
+
+static void TransferXToAcc( )
+{
+	TransferBase( &Accumulator, XReg );
+}
+
+static void TransferXToStack( )
+{
+	TransferBase( &StackPointer, XReg );
+}
+
+static void TransferYToAcc( )
+{
+	TransferBase( &Accumulator, YReg );
+}
+
+static void TransferBase( BYTE* dataDest, BYTE data )
+{
+	StatusNeg = ( data & 0x80 ) ? 1 : 0 ;
+	StatusZero = ( data ) ? 0 : 1;
+	*dataDest = data;
+	ProgramCounter++;
 }
