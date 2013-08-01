@@ -53,15 +53,15 @@ void EmulationStart( )
 
 		while( cyclesLeft > 0 )
 		{
+			if( debugEnable )
+			{
+				Debug( );
+			}
 			6502CPUFetch( &opcode );
 			/*Get the number of cycles this opcode requires*/
 			/*Subtract this from cycles left*/
 			cyclesLeft -= cycleTable[opcode];
 			/*Where does this get enabled?*/
-			if( debugEnable )
-			{
-				Debug( );
-			}
 			6502CPUExecute( opcode );
 			/*Check to see if the opcode executed was CLI.  If so then break out of this loop*/
 			if( opcode == 0x58 )
