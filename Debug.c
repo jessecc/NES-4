@@ -1,11 +1,340 @@
+#include <stdio.h>
 #include "Debug.h"
+
+#define MAX_CMD_LEN  64;
 
 extern BYTE* ram;
 
+DWORD stepping;
+
 void Debug( )
 {
+   char* userLine = NULL;
+   DWORD val = 0;
+   DWORD cmd = 0;
 	/*Main debug loop*/
-	for(;;)
-	{
-	}
+   /*Check if the program counter hit the breakpoint*/
+   if( _BreakpointHit( ) || stepping )
+   {
+	   for(;;)
+	   {
+         stepping = 0;
+         printf( "%s\n", CONSOLE_STRING );
+         userLine = _ReadLine( );
+         if( !userLine )
+         {
+            goto CONTINUE;
+         }
+         cmd = _ParseLine( userLine );
+         switch( cmd )
+         {
+            case CMD_ENABLE_BP:
+               val = EnableBreakpoint( userLine );
+               if( val == 0 )
+               {
+                  printf( "Unable to create breakpoint\n", val );
+                  break;
+               }
+               printf( "%d: Breakpoint created!\n", val );
+               break;
+            case CMD_DISABLE_BP:
+               val = DisableBreakpoint( userLine );
+               if( val == 0 )
+               {
+                  printf( "Unable to remove breakpoint\n" );
+                  break;
+               }
+               printf( "Breakpoint #%d removed!\n", val );
+               break;
+            case CMD_PRINT_REG:
+               PrintRegisters( );
+               break;
+            case CMD_PRINT_MEM:
+               if( !PrintMemory( userLine ) )
+               {
+                  printf( "Invalid memory selection\n" );
+               }
+               break;
+            case CMD_EDIT_REG:
+               if( !EditRegister( userLine ) )
+               {
+                  printf( "No such register\n" );
+               }
+               break;
+            case CMD_EDIT_MEM:
+               if( EditMemory( userLine ) )
+               {
+                  printf( "Invalid memory selection\n" );
+               }
+               break;
+            case CMD_HELP:
+               PrintHelp( );
+               break;
+            case CMD_CONT:
+               stepping = 0;
+               goto CONTINUE;
+               break;
+            case CMD_QUIT:
+               /*Something*/
+               break;
+            case CMD_NEXT_INS:
+               printf( "Program Counter @ 0x%04X\n", ProgramCounter );
+               stepping = 1;
+               goto CONTINUE;
+               break;
+            default:
+               printf( "Invalid Command!\n" );
+               break;
+         }
+	   }
+   }
+CONTINUE:
+}
+
+static DWORD EnableBreakpoint( char* userLine )
+{
+   WORD memoryAddr = 0;
+   breakpoint_t* bp = NULL;
+   while( *userLine == ' ' )
+   {
+      userLine++;
+   }
+   if( sscanf( ++userLine, "%4hx", &memoryAddr ) != 1 )
+   {
+      return 0;
+   }
+   if( !breakpointList || !lastbreakpoint )
+   {
+      bp = _MakeBreakpoint( NULL, memoryAddr, numBreakpoints++ );
+      if( !bp )
+      {
+         return 0;
+      }
+      breakpointList = bp;
+      lastbreakpoint = bp;
+   }
+   else
+   {
+      bp = _MakeBreakpoint( lastbreakpoint, memoryAddr, numBreakpoints++ );
+      if( !bp )
+      {
+         return 0;
+      }
+      lastbreakpoint = bp;
+   }
+   return numBreakpoints;
+}
+
+static DWORD DisableBreakpoint( char* userLine )
+{
+   BYTE num = 0;
+   breakpoint_t* bp = NULL;
+   breakpoint_t* last = NULL;
+   while( *userLine == ' ' )
+   {
+      userLine++;
+   }
+   if( sscanf( ++userLine, "%3hhu", &num ) != 1 )
+   {
+      return 0;
+   }
+   for( bp = last = lastbreakpoint; bp->next; bp=bp->next )
+   {
+      if( num == bp->number )
+      {
+         last->next = bp->next;
+         _DeleteBreakpoint( bp );
+         return num;
+      }
+      last = bp;
+   }
+   return 0;
+}
+
+static void PrintRegisters( )
+{
+   printf( "---Registers---\n" );
+   printf( "\tAccumulator:\t\t0x%02X\n", Accumulator );
+   printf( "\tX Index:\t\t0x%02X\n", XReg );
+   printf( "\tY Index:\t\t0x%02X\n", YReg );
+   printf( "\tStack:\t\t0x%04X\n", 0x100 + StackPointer );
+   printf( "\tPC:\t\t0x%04X\n", ProgramCounter );
+   printf( "\tZ C N I D V B U\n" );
+   printf( "\t%d %d %d %d %d %d %d %d\n", StatusZero, StatusCarry, StatusNeg, StatusInt, StatusDec, StatusOverflow, StatusB, StatusUnk );
+   printf( "\n" );
+}
+
+static void PrintMemory( char* userLine )
+{
+   WORD memoryAddr;
+   char format;
+   WORD length;
+   while( *userLine == ' ' )
+   {
+      userLine++;
+   }
+   if( sscanf( ++userLine, "%4hx %4hu %c", &memoryAddr, &length, &format ) != 3 )
+   {
+      printf( "Invalid command syntax\n" );
+      return;
+   }
+   _PrintMemory( memoryAddr, length, format );
+}
+
+static void _PrintMemory( WORD addr, WORD length, char format )
+{
+   DWORD tmp = 0;
+   DWORD index = 0;
+   DWORD maxNum = 0;
+   DWORD size = 0;
+   char* pformat = NULL;
+   switch ( format )
+   {
+      case 'x':
+         pformat = "0x%hX ";
+         maxNum = 8;
+         size = 2;
+         break;
+      case 'b':
+         pformat = "0x%hhX ";
+         maxNum = 16;
+         size = 1;
+         break;
+      case 'd':
+         pformat = "0x%hd ";
+         maxNum = 8;
+         size = 2;
+         break;
+      case 'c':
+         pformat = "0x%c ";
+         maxNum = 16;
+         size = 1;
+         break;
+      default:
+         printf( "Invalid format specifier\n" );
+         return;
+   }
+   tmp += addr + length;
+   if( tmp > 0xFFFF )
+   {
+      printf( "Length of memory exceeds total RAM\n" );
+      return;
+   }
+   for( index = 0; index < length; index+=maxNum )
+   {
+      printf( "0x%04X:\t", ( ram + addr + index ) ); 
+      for( tmp = 0; tmp < maxNum; tmp++ )
+      {
+         printf( pformat, *( ram + addr + index tmp*size ) );
+      }
+      printf( "\n" );
+   }
+}
+
+static char* _ReadLine( )
+{
+   char* ret = NULL;
+   ret = (char*)malloc( MAX_CMD_LEN );
+   if( !ret )
+   {
+      return NULL;
+   }
+   if( scanf( "%64s", ret ) != 1 )
+   {
+      return NULL;
+   }
+   ret[ MAX_CMD_LEN - 1] = '\0';
+   return ret;
+}
+
+static DWORD _ParseLine( char* userLine )
+{
+   if( !strncmp( CMD_STR_1, userLine, strlen( CMD_STR_1 ) ) )
+   {
+      userLine += strlen( CMD_STR_1 );
+      return CMD_ENABLE_BP;
+   }
+   else if( !strncmp( CMD_STR_2, userLine, strlen( CMD_STR_2 ) ) )
+   {
+      userLine += strlen( CMD_STR_2 );
+      return CMD_DISABLE_BP;
+   }
+   else if( !strncmp( CMD_STR_3, userLine, strlen( CMD_STR_3 ) ) )
+   {
+      userLine += strlen( CMD_STR_3 );
+      return CMD_PRINT_REG;
+   }
+   else if( !strncmp( CMD_STR_4, userLine, strlen( CMD_STR_4 ) ) )
+   {
+      userLine += strlen( CMD_STR_4 );
+      return CMD_PRINT_MEM;
+   }
+   else if( !strncmp( CMD_STR_5, userLine, strlen( CMD_STR_5 ) ) )
+   {
+      userLine += strlen( CMD_STR_5 );
+      return CMD_EDIT_REG;
+   }
+   else if( !strncmp( CMD_STR_6, userLine, strlen( CMD_STR_6 ) ) )
+   {
+      userLine += strlen( CMD_STR_6 );
+      return CMD_EDIT_MEM;
+   }
+   else if( !strncmp( CMD_STR_7, userLine, strlen( CMD_STR_7 ) ) )
+   {
+      userLine += strlen( CMD_STR_7 );
+      return CMD_HELP;
+   }
+   else if( !strncmp( CMD_STR_8, userLine, strlen( CMD_STR_8 ) ) )
+   {
+      userLine += strlen( CMD_STR_8 );
+      return CMD_CONT;
+   }
+   else if( !strncmp( CMD_STR_9, userLine, strlen( CMD_STR_9 ) ) )
+   {
+      userLine += strlen( CMD_STR_9 );
+      return CMD_QUIT;
+   }
+   else if( !strncmp( CMD_STR_10, userLine, strlen( CMD_STR_10 ) ) )
+   {
+      userLine += strlen( CMD_STR_10 );
+      return CMD_NEXT_INS;
+   }
+   else
+   {
+      return CMD_INVALID;
+   }
+}
+
+static DWORD EditRegister( char* userLiner )
+{
+   return 1;
+}
+
+static DWORD _EditRegister( BYTE reg, WORD val )
+{
+   return 1;
+}
+
+static DWORD EditMemory( char* userLine )
+{
+   return 1;
+}
+
+static DWORD _EditMemory( WORD addr, BYTE data )
+{
+   return 1;
+}
+
+static breakpoint_t* _MakeBreakpoint( breakpoint_t* next, WORD addr, BYTE num )
+{
+   return NULL;
+}
+
+static void _DeleteBreakpoint( breakpoint_t* bp )
+{
+}
+
+static DWORD _BreakpointHit( )
+{
+   return 1;
 }
