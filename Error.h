@@ -10,13 +10,13 @@
 #define FATAL_LEVEL			2
 #define NONE_LEVEL			3
 
-char** errorMessages = {
+char *errorMessages[] = {
 	"Success!",
 	"No Memory!",
 	"Invalid Pointer!"
 };
 
-char** levelString = {
+char *levelString[] = {
 	"Warning",
 	"Error", 
 	"Fatal",
