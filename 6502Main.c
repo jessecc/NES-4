@@ -2,18 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 /*Local Includes*/
 #include "Error.h"
 #include "6502Emu.h"
 #include "GenericTypes.h"
-
-struct arg_s
-{
-	/*Do stuff here*/
-	unsigned int ramSize;
-	DWORD debugEnable;
-};
 
 void Usage( char** argv )
 {
@@ -26,25 +20,32 @@ void Usage( char** argv )
 int main( int argc, char** argv )
 {
 	struct arg_s args;
+	char ch;
+	Emulator_t *em;
+
 	/*Check/Get Args and all that jive ass bullshit*/
 	if( argc < 2 ) 
 	{
 		/*Doesn't return!*/
 		Usage( argv );
 	}
-	memset( args, 0, sizeof( args ) );
+
+	memset( &args, 0, sizeof( args ) );
+	em = new( Emulator_t );
+
 	/*Parse args and shiz*/
 	/*Emulation Init*/
-	if( EmulationInit( &args ) != ERROR_SUCCESS )
+	if( EmulationInit( &args, em ) != ERROR_SUCCESS )
 	{
 		/*Does not return!*/
 		ErrorExit();
 	}
+
 	/*Emulation Begin*/
-	EmulationStart();
+	EmulationStart( em );
 
 	/*Emulation Cleanup*/
-	if( EmulationCleanup() != ERROR_SUCCESS ) 
+	if( EmulationCleanup( em ) != ERROR_SUCCESS ) 
 	{
 		ErrorExit();
 	}

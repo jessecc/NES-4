@@ -2,15 +2,15 @@
 #define __DEBUG_H_
 
 #include "GenericTypes.h"
-#include "6502Types.h"
+//#include "6502Types.h"
 
 /*Strings*/
 #define CONSOLE_STRING			" > "
 /*Commands*/
 #define CMD_ENABLE_BP			1
 #define CMD_DISABLE_BP			2
-#define CMD_PRNT_REG			   3
-#define CMD_PRNT_MEM			   4
+#define CMD_PRINT_REG			   3
+#define CMD_PRINT_MEM			   4
 #define CMD_EDIT_REG			   5
 #define CMD_EDIT_MEM			   6
 #define CMD_HELP				   7
@@ -41,19 +41,19 @@ breakpoint_t* breakpointList;
 breakpoint_t* lastbreakpoint;
 BYTE numBreakpoints;
 
-extern 6502Reg8   Accumulator;
-extern 6502Reg8   XReg;
-extern 6502Reg8   YReg;
-extern 6502Reg8   StackPointer;
-extern 6502Reg16  ProgramCounter;
-extern 6502Reg8   StatusZero;
-extern 6502Reg8   StatusCarry;
-extern 6502Reg8   StatusNeg;
-extern 6502Reg8   StatusInt;
-extern 6502Reg8   StatusDec;
-extern 6502Reg8   StatusOverflow;
-extern 6502Reg8   StatusB;
-extern 6502Reg8   StatusUnk;
+extern BYTE   Accumulator;
+extern BYTE   XReg;
+extern BYTE   YReg;
+extern BYTE   StackPointer;
+extern WORD  ProgramCounter;
+extern BYTE   StatusZero;
+extern BYTE   StatusCarry;
+extern BYTE   StatusNeg;
+extern BYTE   StatusInt;
+extern BYTE   StatusDec;
+extern BYTE   StatusOverflow;
+extern BYTE   StatusB;
+extern BYTE   StatusUnk;
 
 /*This is the main function that will be called by the emulator*/
 void Debug( );

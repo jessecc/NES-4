@@ -6,6 +6,25 @@
 /*Local includes*/
 #include "Error.h"
 
+unsigned int globalError;
+unsigned int errorLevel;
+
+/*
+char *errorMessages[] = {
+	"Success!",
+	"No Memory!",
+	"Invalid Pointer!"
+};
+
+char *levelString[] = {
+	"Warning",
+	"Error", 
+	"Fatal",
+	"None"
+};
+*/
+
+
 void ErrorExit( )
 {
 	ShowLastError();
@@ -14,12 +33,13 @@ void ErrorExit( )
 
 void ShowLastError( )
 {
-	printf( "%s: %s\n", levelString[errorLevel], errorMessages[globalError] );
+	//printf( "%s: %s\n", levelString[errorLevel], errorMessages[globalError] );
 }
 
 void SetError( unsigned int errLvl, unsigned int err )
 {
-	SetErrorLevel( errLvl );
+	//SetErrorLevel( errLvl );
+	errorLevel = errLvl;
 	globalError = err;
 }
 
