@@ -155,6 +155,8 @@ void bfid_init( ){
 	register_bfid_func( "set", "set program variables", 
 			"set [variable] [value]", bfid_set );
 
+	register_bfid_func( "print", "print emulator memory", 
+			"print [addr] [length] [format (optional)]", dbg_printmem );
 	/*
 	register_bfid_func( "step", "step through code instructions", 
 			"step [amount]", bfid_step );
