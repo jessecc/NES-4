@@ -33,4 +33,7 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em );
 void EmulationStart( Emulator_t *em );
 unsigned int EmulationCleanup( Emulator_t *em );
 
+void CpuStep( e6502_t *cpu );
+void EmulationStep( Emulator_t *em );
+
 #endif
