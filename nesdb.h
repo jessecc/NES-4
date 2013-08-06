@@ -54,14 +54,13 @@ char *get_variable( char *name );
 //int bfid_step( Emulator_t *dem, int argc, char **argv );
 //int bfid_dump( Emulator_t *dem, int argc, char **argv );
 int bfid_exit( Emulator_t *em, int argc, char **argv );
-//int bfid_cont( Emulator_t *dem, int argc, char **argv );
 int bfid_set( Emulator_t *dem, int argc, char **argv ); 
 int bfid_help( Emulator_t *dem, int argc, char **argv );
-//int bfid_hook( Emulator_t *dem, int argc, char **argv );
+int bfid_hook( Emulator_t *dem, int argc, char **argv );
 //int bfid_disas( Emulator_t *dem, int argc, char **argv );
 //int bfid_trace( Emulator_t *dem, int argc, char **argv );
-//int bfid_break( Emulator_t *dem, int argc, char **argv );
-//int bfid_clear( Emulator_t *dem, int argc, char **argv );
+int bfid_break( Emulator_t *dem, int argc, char **argv );
+int bfid_clear( Emulator_t *dem, int argc, char **argv );
 int bfid_script( Emulator_t *dem, int argc, char **argv );
 int bfid_alias( Emulator_t *dem, int argc, char **argv );
 //int bfid_poke( Emulator_t *dem, int argc, char **argv );
@@ -69,5 +68,6 @@ int bfid_alias( Emulator_t *dem, int argc, char **argv );
 //int bfid_exec( Emulator_t *dem, int argc, char **argv );
 int bfid_echo( Emulator_t *dem, int argc, char **argv );
 int dbg_printmem( Emulator_t *dem, int argc, char **argv );
+int dbg_cont( Emulator_t *dem, int argc, char **argv );
 
 #endif

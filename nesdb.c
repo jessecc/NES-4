@@ -15,6 +15,7 @@ int bf_debugger( Emulator_t *em ){
 	char buf[256];
 	int lret = 0;
 	int broke;
+	int i;
 
 	bfid_brkp_t *temp;
 	bfid_cmd_hook_t *hook;
@@ -43,48 +44,51 @@ int bf_debugger( Emulator_t *em ){
 			if (( lret = bfid_execcmd( dem, buf )) < 0 )
 				printf( "Unknown command.\n" );
 		} else {
-			/*
-			if ( dbf->ip < dbf->codesize ){
-				bf_step( dbf );
 
+			for ( i = 0; i < dem->cpuNo; i++ ){
+				CpuStep( &dem->Cpus[i] );
+
+				// Check for breakpoints on the cpu
 				for ( temp = brkp_list; temp; temp = temp->next ){
 					broke = 0;
-					if ( temp->type == BRK_IP && temp->val == dbf->ip ){
+					if ( temp->type == BRK_IP && temp->val == dem->Cpus[i].pCounter ){
 						interrupted = broke = 1;
 
-					} else if ( temp->type == BRK_MEM && temp->val == dbf->ptr ){
+					} else if ( temp->type == BRK_MEM && temp->val == dem->Cpus[i].sPointer ){
 						interrupted = broke = 1;
 
 					} else if ( 	temp->type == BRK_INSTR && 
-							temp->val == dbf->code[ dbf->ip ]){
+							temp->val == dem->Cpus[i].memory[ dem->Cpus[i].pCounter ]){
+
 						interrupted = broke = 1;
 					}
 
 					if ( broke ){
-						sprintf( buf, "%u\0", dbf->ip );
+						sprintf( buf, "%u\0", dem->Cpus[i].pCounter );
 						set_variable( "ip", buf );
 
-						sprintf( buf, "%u\0", dbf->ptr );
+						sprintf( buf, "%u\0", dem->Cpus[i].sPointer );
 						set_variable( "ptr", buf );
+
+						if ( 	get_variable( "quiet" ) && 
+							strcmp( get_variable( "quiet" ), "true" ))
+						{
+							printf( "[ ] cpu%d: breakpoint %d\n", i, temp->i );
+						}
 				
 						for ( hook = temp->hooks; hook; hook = hook->next ){
-							if ( bfid_execcmd( dbf, hook->cmd ) < 0 )
+							if ( bfid_execcmd( dem, hook->cmd ) < 0 )
 								printf( "[ ] Unknown hook command: \"%s\"\n", hook->cmd );
 						}
 					}
 				}
-
-			} else {
-				printf( "Program terminated.\n" );
-				interrupted = 1;
 			}
-			*/
-			EmulationStep( dem );
 		}
 	}
 
 	return 0;
 }
+
 int bfid_exit( Emulator_t *dem, int argc, char **argv ){
 	dem->Debugging = 0;
 	signal( SIGINT, SIG_DFL );
@@ -94,6 +98,12 @@ int bfid_exit( Emulator_t *dem, int argc, char **argv ){
 
 int debug_signal( int s ){
 	interrupted = 1;
+
+	return 0;
+}
+
+int dbg_cont( Emulator_t *dem, int argc, char **argv ){
+	interrupted = 0;
 
 	return 0;
 }
@@ -108,7 +118,6 @@ void bfid_init( ){
 	register_bfid_func( "alias", "create an alias for a debugger command", 
 			"alias [alias] [command]", bfid_alias );
 
-	/*
 	register_bfid_func( "break", "set program breakpoints", 
 			"break [type] [value]", bfid_break );
 
@@ -116,13 +125,11 @@ void bfid_init( ){
 			"clear [value]", bfid_clear );
 
 	register_bfid_func( "cont", "continue program execution in the debugger", 
-			"cont", bfid_cont );
+			"cont", dbg_cont );
 
+	/*
 	register_bfid_func( "disas", "disassemble program instructions", 
 			"disas [amount] | disas [start] [end] [(optional)filter string]", bfid_disas );
-
-	register_bfid_func( "dump", "dump program memory", 
-			"dump [amount] | dump [start] [end]", bfid_dump );
 	*/
 	register_bfid_func( "echo", "print text to screen", 
 			"echo [text]", bfid_echo );
@@ -138,10 +145,10 @@ void bfid_init( ){
 	register_bfid_func( "help", "Get help for debugger commands", 
 			"help [command]", bfid_help );
 
-	/*
 	register_bfid_func( "hook", "hook command onto breakpoint", 
 			"hook [id] [code]", bfid_hook );
 
+	/*
 	register_bfid_func( "peek", "get values from memory", 
 			"peek [type] [where]", bfid_peek );
 
