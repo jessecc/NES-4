@@ -12,7 +12,7 @@ typedef enum { false, true } bool;
 #define WORD_MAX  0xffff
 #define DWORD_MAX 0xffffffff
 
-#define new( n ) (memset( malloc( sizeof( n )), 0, sizeof( n )))
+#define new( n ) calloc( 1, sizeof( n ) );
 
 typedef struct e6502
 {
