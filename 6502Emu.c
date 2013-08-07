@@ -49,16 +49,6 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 		return 1;
 	}
 
-   /*We should find an alternative to this*/
-   fseek( fp, SEEK_END );
-   romSize = ftell( fp );
-
-   if( romSize > ( args->ramSize - args->offset ) )
-   {
-      SetError( FATAL_LEVEL, ERROR_INVALID_ROM_SIZE );
-      return 1;
-   }
-
 	fread( ram + args->offset, args->ramSize - args->offset, 1, fp );
 
 	// Initialize emulator structure
