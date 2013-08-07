@@ -13,6 +13,8 @@ typedef struct arg_s
 	unsigned int ramSize;
 	bool debugEnable;
 	unsigned int cpuNo;
+	unsigned int offset;
+	char *filename;
 
 	DWORD debugFlags;
 } arg_s_t;
@@ -27,6 +29,9 @@ typedef struct Emulator {
 	struct device *Devices;
 	bool Debugging;
 	bool running;
+
+	char *filename;
+	FILE *fp;
 } Emulator_t;
 
 unsigned int EmulationInit( struct arg_s *args, Emulator_t *em );

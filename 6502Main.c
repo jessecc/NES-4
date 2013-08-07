@@ -24,10 +24,12 @@ void Usage( char** argv )
 int main( int argc, char** argv )
 {
 	struct arg_s args;
-	char ch, *filename;
-	unsigned int 	i, 
+	char ch;
+	char *filename = NULL;
+	unsigned int i = 0, 
 		debug = 0, 
 		nCpu = 0, 
+		romOffset = 0,
 		memSize = 0;
 	Emulator_t *em;
 
@@ -36,7 +38,7 @@ int main( int argc, char** argv )
 		Usage( argv );
 
 	// parse all dem fine command line options
-	while (( ch = getopt( argc, argv, "f:m:c:dh" )) != -1 && i++ < argc ){
+	while (( ch = getopt( argc, argv, "f:m:c:o:dh" )) != -1 && i++ < argc ){
 		switch( ch ){
 			case 'f':
 				filename = argv[++i];
@@ -46,6 +48,9 @@ int main( int argc, char** argv )
 				break;
 			case 'c':
 				nCpu = atoi( argv[++i] );
+				break;
+			case 'o':
+				romOffset = atoi( argv[++i] );
 				break;
 			case 'd':
 				debug = 1;
@@ -58,14 +63,21 @@ int main( int argc, char** argv )
 		}
 	}
 
+   if ( filename == NULL ){
+	SetError( FATAL_LEVEL, ERROR_NOFILE );
+	ErrorExit( );
+   }
+
 	// aw yeah gurrl
 	memset( &args, 0, sizeof( args ) );
 	em = new( Emulator_t );
    if( !em )
    {
-      ErrorExit( );
+	ErrorExit( );
    }
 
+	args.filename = filename;
+	args.offset = romOffset;
 	args.ramSize = memSize;
 	args.debugEnable = debug;
 	args.cpuNo = nCpu;

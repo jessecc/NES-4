@@ -20,6 +20,7 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 {
 	BYTE *ram;
 	int i;
+	FILE *fp = NULL;
 
 	/*Allocate various structures and the like*/
 	if( args->ramSize >= RAM_SIZE_MAX || args->ramSize <= ( DEFAULT_RAM_SIZE / 2 ) )
@@ -42,11 +43,18 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 		return 1;
 	}
 
-	//args->debugEnable = debugEnable;
+	if (( fp = fopen( args->filename, "r" )) == NULL ){
+		SetError( FATAL_LEVEL, ERROR_NOFILE );
+		return 1;
+	}
+
+	fread( ram + args->offset, args->ramSize - args->offset, 1, fp );
 
 	// Initialize emulator structure
 	em->ramSize = args->ramSize;
 	em->ram = ram;
+	em->filename = strdup( args->filename );
+	em->fp = fp;
 
 	em->Cpus = new( e6502_t[args->cpuNo] );
    if( !(em->Cpus) )
