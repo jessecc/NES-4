@@ -29,7 +29,7 @@ int main( int argc, char** argv )
 	char *filename = NULL;
 	unsigned int i = 0, 
 		debug = 0, 
-		nCpu = 0, 
+		nCpu = 1, 
 		romOffset = 0,
 		memSize = 0;
 	Emulator_t *em;
