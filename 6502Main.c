@@ -12,10 +12,11 @@
 void Usage( char** argv )
 {
 	/*THIS WILL NOT RETURN!*/
-	printf( "Usage: %s -f [file] -mc [size] -dh\n", argv[0] );
+	printf( "Usage: %s -f [file] -mco [size] -dh\n", argv[0] );
 	printf( "	-f:	File name of rom/image\n"
 		"	-m:	Size of RAM\n"
 		"	-c:	Number of CPUs\n"
+		"	-o:	Offset to load rom at\n"
 		"	-d:	Debug program\n"
 		"	-h:	Display this help and exit\n" );
 	exit( 0 );
