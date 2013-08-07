@@ -20,6 +20,7 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 {
 	BYTE *ram;
 	int i;
+   long int romSize;
 	FILE *fp = NULL;
 
 	/*Allocate various structures and the like*/
@@ -47,6 +48,16 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 		SetError( FATAL_LEVEL, ERROR_NOFILE );
 		return 1;
 	}
+
+   /*We should find an alternative to this*/
+   fseek( fp, SEEK_END );
+   romSize = ftell( fp );
+
+   if( romSize > ( args->ramSize - args->offset ) )
+   {
+      SetError( FATAL_LEVEL, ERROR_INVALID_ROM_SIZE );
+      return 1;
+   }
 
 	fread( ram + args->offset, args->ramSize - args->offset, 1, fp );
 
