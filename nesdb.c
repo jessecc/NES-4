@@ -31,7 +31,7 @@ int bf_debugger( Emulator_t *em ){
 	while ( dem->Debugging ){
 		if ( interrupted ){
 			if ( lret )
-				printf( "[%d] ", lret );
+				printf( "[%x] ", lret & 0xff );
 			else 
 				printf( "[ ] " );
 
@@ -41,8 +41,17 @@ int bf_debugger( Emulator_t *em ){
 			if ( strlen( buf ) < 2 )
 				continue;
 
-			if (( lret = bfid_execcmd( dem, buf )) < 0 )
+			if (( lret = bfid_execcmd( dem, buf )) < 0 ){
 				printf( "Unknown command.\n" );
+				continue;
+			}
+
+			sprintf( buf, "%u\0", dem->Cpus[0].pCounter );
+			set_variable( "ip", buf );
+
+			sprintf( buf, "%u\0", dem->Cpus[0].sPointer );
+			set_variable( "ptr", buf );
+
 		} else {
 
 			for ( i = 0; i < dem->cpuNo; i++ ){
@@ -148,22 +157,24 @@ void bfid_init( ){
 	register_bfid_func( "hook", "hook command onto breakpoint", 
 			"hook [id] [code]", bfid_hook );
 
-	/*
 	register_bfid_func( "peek", "get values from memory", 
-			"peek [type] [where]", bfid_peek );
+			"peek [where]", bfid_peek );
 
 	register_bfid_func( "poke", "place values in memory", 
-			"poke [type] [where] [value]", bfid_poke );
+			"poke [where] [value]", bfid_poke );
 
-	*/
+	register_bfid_func( "print", "print emulator memory", 
+			"print [addr] [length] [format (optional)]", dbg_printmem );
+
 	register_bfid_func( "script", "run a debugger script", 
 			"script [filename]", bfid_script );
+
+	register_bfid_func( "regs", "print processor registers",
+			"regs [register]", dbg_regs );
 
 	register_bfid_func( "set", "set program variables", 
 			"set [variable] [value]", bfid_set );
 
-	register_bfid_func( "print", "print emulator memory", 
-			"print [addr] [length] [format (optional)]", dbg_printmem );
 	/*
 	register_bfid_func( "step", "step through code instructions", 
 			"step [amount]", bfid_step );

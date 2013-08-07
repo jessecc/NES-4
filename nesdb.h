@@ -63,11 +63,12 @@ int bfid_break( Emulator_t *dem, int argc, char **argv );
 int bfid_clear( Emulator_t *dem, int argc, char **argv );
 int bfid_script( Emulator_t *dem, int argc, char **argv );
 int bfid_alias( Emulator_t *dem, int argc, char **argv );
-//int bfid_poke( Emulator_t *dem, int argc, char **argv );
-//int bfid_peek( Emulator_t *dem, int argc, char **argv );
+int bfid_poke( Emulator_t *dem, int argc, char **argv );
+int bfid_peek( Emulator_t *dem, int argc, char **argv );
 //int bfid_exec( Emulator_t *dem, int argc, char **argv );
 int bfid_echo( Emulator_t *dem, int argc, char **argv );
 int dbg_printmem( Emulator_t *dem, int argc, char **argv );
 int dbg_cont( Emulator_t *dem, int argc, char **argv );
+int dbg_regs( Emulator_t *dem, int argc, char **argv );
 
 #endif
