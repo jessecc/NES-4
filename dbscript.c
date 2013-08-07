@@ -7,8 +7,14 @@ void register_bfid_func( char *name, char *help,
 			 char *usage, bfid_func_t function )
 {
 
-	bfid_cmd_t 	*move = new( bfid_cmd_t ),
+	bfid_cmd_t 	*move,
 			*temp;
+   move = new( bfid_cmd_t );
+   if( !move )
+   {
+      /*FIXME:Need to handle if this allocation fails*/
+      return;
+   }
 
 	move->name 	= name;
 	move->help 	= help;

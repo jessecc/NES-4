@@ -49,6 +49,10 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 	em->ram = ram;
 
 	em->Cpus = new( e6502_t[args->cpuNo] );
+   if( !(em->Cpus) )
+   {
+      return ERROR_NOMEM;
+   }
 	em->cpuNo = args->cpuNo;
 	for ( i = 0; i < args->cpuNo; i++ )
 		em->Cpus[i].memory = ram;

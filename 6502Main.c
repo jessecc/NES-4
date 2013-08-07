@@ -25,7 +25,7 @@ int main( int argc, char** argv )
 {
 	struct arg_s args;
 	char ch, *filename;
-	int 	i, 
+	unsigned int 	i, 
 		debug = 0, 
 		nCpu = 0, 
 		memSize = 0;
@@ -61,6 +61,10 @@ int main( int argc, char** argv )
 	// aw yeah gurrl
 	memset( &args, 0, sizeof( args ) );
 	em = new( Emulator_t );
+   if( !em )
+   {
+      ErrorExit( );
+   }
 
 	args.ramSize = memSize;
 	args.debugEnable = debug;
