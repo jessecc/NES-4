@@ -5,28 +5,11 @@
 
 /*Local Includes*/
 #include "6502CPU.h"
-//#include "6502Opcodes.h"
 #include "Error.h"
 #include "MemoryInterface.h"
 
-// Dunno what this is for
-// TODO:
-// 	find out what it's for
-#define AC 0xff
-
 static int clockCount;
 struct e6502_t *CurrentCpu = NULL;
-//void (*FunctionTable[0xFF])();	/*256 function pointers*/
-
-static void XorAccMemBase( e6502_t *cpu, BYTE data );
-static void LoadXBase( e6502_t *cpu, BYTE data );
-static void LoadYBase( e6502_t *cpu, BYTE data );
-static void OrAccMemBase( e6502_t *cpu, BYTE data );
-static void RotateLeftBase( e6502_t *cpu, WORD dataAddr, BYTE data );
-static void RotateRightBase( e6502_t *cpu, WORD dataAddr, BYTE data );
-static void SubtractAccMemBase( e6502_t *cpu, BYTE data );
-static void TransferBase( e6502_t *cpu, BYTE* dataDest, BYTE data );
-static void PushProgamCounter( e6502_t *cpu );
 
 static void Jam( e6502_t *cpu )
 {
@@ -183,33 +166,108 @@ static void AndBase( e6502_t *cpu, BYTE data )
 
 static void ShlAcc( e6502_t *cpu )
 {
-	cpu->accumulator = cpu->accumulator << 1;
+   cpu->statusCarry = ( cpu->accumulator & 0x80 ) ? 1 : 0;
+   cpu->accumulator <<= 1;
+   cpu->statusNeg = ( cpu->accumulator & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( cpu->accumulator ) ? 0 : 1;
+   cpu->pCounter++;
 }
 
 static void ShlZp( e6502_t *cpu )
 {
 	WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
-	WriteByte( cpu->memory, dataAddr, ReadByte( cpu->memory, dataAddr ) << 1 );
+   BYTE data = ReadByte( cpu->memory, dataAddr );
+   cpu->statusCarry = ( data & 0x80 ) ? 1 : 0;
+   data <<= 1;
+   cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( data ) ? 0 : 1;
+	WriteByte( cpu->memory, dataAddr, data);
 }
 
 static void ShlZpIndex( e6502_t *cpu )
 {
 	WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
-	WriteByte( cpu->memory, dataAddr, ReadByte( cpu->memory, dataAddr ) << 1 );
+   BYTE data = ReadByte( cpu->memory, dataAddr );
+   cpu->statusCarry = ( data & 0x80 ) ? 1 : 0;
+   data <<= 1;
+   cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( data ) ? 0 : 1;
+	WriteByte( cpu->memory, dataAddr, data );
 }
 
 static void ShlAbs( e6502_t *cpu )
 {
 	WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-	WriteByte( cpu->memory, dataAddr, ReadByte( cpu->memory, dataAddr ) << 1 );
+   BYTE data = ReadByte( cpu->memory, dataAddr );
+   cpu->statusCarry = ( data & 0x80 ) ? 1 : 0;
+   data <<= 1;
+   cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( data ) ? 0 : 1;
+	WriteByte( cpu->memory, dataAddr, data );
 	cpu->pCounter += 2;
 }
 
 static void ShlAbsIndex( e6502_t *cpu )
 {
 	WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-	WriteByte( cpu->memory, dataAddr, ReadByte( cpu->memory, dataAddr ) << 1 );
+   BYTE data = ReadByte( cpu->memory, dataAddr );
+   cpu->statusCarry = ( data & 0x80 ) ? 1 : 0;
+   data <<= 1;
+   cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( data ) ? 0 : 1;
+	WriteByte( cpu->memory, dataAddr, data );
 	cpu->pCounter += 2;
+}
+
+static void ShrAcc( e6502_t *cpu )
+{
+   cpu->statusCarry = ( cpu->accumulator & 0x1 ) ? 1 : 0;
+   cpu->accumulator >>= 1;
+   cpu->statusNeg = ( cpu->accumulator & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( cpu->accumulator ) ? 0 : 1;
+   cpu->pCounter++;
+}
+
+static void ShrZp( e6502_t *cpu )
+{
+   WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+   BYTE data = ReadByte( cpu->memory, dataAddr );
+   cpu->statusCarry = ( data & 0x1 ) ? 1 : 0;
+   data >>= 1;
+   cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( data ) ? 0 : 1;
+}
+
+static void ShrZpIndex( e6502_t *cpu )
+{
+   WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+   BYTE data = ReadByte( cpu->memory, dataAddr );
+   cpu->statusCarry = ( data & 0x1 ) ? 1 : 0;
+   data >>= 1;
+   cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( data ) ? 0 : 1;
+}
+
+static void ShrAbs( e6502_t *cpu )
+{
+   WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+   BYTE data = ReadByte( cpu->memory, dataAddr );
+   cpu->statusCarry = ( data & 0x1 ) ? 1 : 0;
+   data >>= 1;
+   cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( data ) ? 0 : 1;
+   cpu->pCounter += 2;
+}
+
+static void ShrAbsIndex( e6502_t *cpu )
+{
+   WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+   BYTE data = ReadByte( cpu->memory, dataAddr );
+   cpu->statusCarry = ( data & 0x1 ) ? 1 : 0;
+   data >>= 1;
+   cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
+   cpu->statusZero = ( data ) ? 0 : 1;
+   cpu->pCounter += 2;
 }
 
 static void BranchCarryClear( e6502_t *cpu )
@@ -755,10 +813,16 @@ static void OrAccMemAbs( e6502_t *cpu )
 	cpu->pCounter += 2;
 }
 
-static void OrAccMemAbsIndex( e6502_t *cpu )
+static void OrAccMemAbsIndexX( e6502_t *cpu )
 {
 	OrAccMemBase( cpu, ReadByte( cpu->memory, ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex ) );
 	cpu->pCounter += 2;
+}
+
+static void OrAccMemAbsIndexY( e6502_t *cpu )
+{
+   OrAccMemBase( cpu, ReadByte( cpu->memory, ReadWord( cpu->memory, cpu->pCounter ) + cpu->yIndex ) );
+   cpu->pCounter += 2;
 }
 
 static void OrAccMemIndexInd( e6502_t *cpu )
@@ -785,7 +849,7 @@ static void PushAcc( e6502_t *cpu )
 	cpu->pCounter++;
 }
 
-static void PushProgamCounter( e6502_t *cpu )
+static void PushProgramCounter( e6502_t *cpu )
 {
 	StackPush( cpu, ( cpu->pCounter >> 8 ) & 0xFF );
 	StackPush( cpu, cpu->pCounter & 0xFF );
@@ -945,10 +1009,16 @@ static void SubtractAccMemAbs( e6502_t *cpu )
 	cpu->pCounter += 2;
 }
 
-static void SubtractAccMemAbsIndex( e6502_t *cpu )
+static void SubtractAccMemAbsIndexX( e6502_t *cpu )
 {
 	SubtractAccMemBase( cpu, ReadByte( cpu->memory, ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex ) );
 	cpu->pCounter += 2;
+}
+
+static void SubtractAccMemAbsIndexY( e6502_t *cpu )
+{
+   SubtractAccMemBase( cpu, ReadByte( cpu->memory, ReadWord( cpu->memory, cpu->pCounter ) + cpu->yIndex ) );
+   cpu->pCounter += 2;
 }
 
 static void SubtractAccMemIndexInd( e6502_t *cpu )
@@ -963,12 +1033,10 @@ static void SubtractAccMemIndIndex( e6502_t *cpu )
 
 static void SubtractAccMemBase( e6502_t *cpu, BYTE data )
 {
-	// TODO: Replace temp
-	int temp = 0;
 	WORD tmp = cpu->accumulator - data - cpu->statusCarry;
 	cpu->statusNeg = ( tmp & 0x80 ) ? 1 : 0;
 	cpu->statusZero = ( tmp ) ? 0 : 1;
-	cpu->statusOverflow = ( ((AC ^ temp) & 0x80) && ((AC ^ data) & 0x80) ) ? 1 : 0;		/*I hate this thing*/
+	cpu->statusOverflow = ( ((cpu->accumulator ^ tmp) & 0x80) && ((cpu->accumulator ^ data) & 0x80) ) ? 1 : 0;		/*I hate this thing*/
 	if( cpu->statusDec )
 	{
 		/*Whatever*/
@@ -1103,25 +1171,26 @@ static void TransferBase( e6502_t *cpu, BYTE* dataDest, BYTE data )
 	cpu->pCounter++;
 }
 
-//void (*FunctionTable[0xFF])();	/*256 function pointers*/
-void (*FunctionTable[0xFF])() = 
+/*I'd disable wordwrap to see this and have it look less ugly*/
+void (*FunctionTable[0x100])() = 
 {
-Break, OrAccMemIndexInd, UndocOp, UndocOp, UndocOp, OrAccMemZp, ShlZp, UndocOp, /* FIXME PushProgramCounter */UndocOp, OrAccMemImm, ShlAcc, UndocOp, UndocOp, OrAccMemAbs, ShlAbs, UndocOp,
-BranchNotNegative, OrAccMemIndIndex, UndocOp, UndocOp, UndocOp, OrAccMemZpIndex, ShlZpIndex, UndocOp, ClearCarry, /* FIXME OrAccMemAbsIndexY*/UndocOp, UndocOp, UndocOp, UndocOp, OrAccMemAbsIndex, ShlAbsIndex, UndocOp,
-JumpSubroutine, AndIndexInd, UndocOp, UndocOp, BitTestZp, AndZp, RotateLeftZp, UndocOp, PopProgramCounter, AndImm, RotateLeftAcc, UndocOp, BitTestAbs, AndAbs, RotateLeftAbs, UndocOp,
-BranchNegative, AndIndIndex, UndocOp, UndocOp, UndocOp, AndZpIndex, RotateLeftZpIndex, UndocOp, SetCarry, AndAbsIndexY, UndocOp, UndocOp, UndocOp, AndAbsIndexX, /* FIXME RotateLeftAbsIndexX*/UndocOp, UndocOp,
-ReturnInterrupt, XorAccMemIndexInd, UndocOp, UndocOp, UndocOp, XorAccMemZp, /* FIXME ShrZp */UndocOp, UndocOp, PushAcc, XorAccMemImm, /* FIXME ShrAcc */UndocOp, UndocOp, JumpAbs, XorAccMemAbs, /* FIXME ShrAbs */UndocOp, UndocOp,
-/* FIXME BranchNoOveflow */UndocOp, XorAccMemIndIndex, UndocOp, UndocOp, UndocOp, XorAccMemZpIndex, /* FIXME ShrZpIndex*/UndocOp, UndocOp, ClearInterrupts, XorAccMemAbsIndexY, UndocOp, UndocOp, UndocOp, XorAccMemAbsIndexX, /* FIXME ShrAbsIndexX */UndocOp, UndocOp,
-ReturnSubroutine, AddCarryIndexInd, UndocOp, UndocOp, UndocOp, AddCarryZp, RotateRightZp, UndocOp, /* FIXME PopAccumulator */UndocOp, /* FIXME AddCarrImm */UndocOp, RotateRightAcc, UndocOp, JumpInd, AddCarryAbs, RotateRightAbs, UndocOp,
-BranchOverflow, AddCarryIndIndex, UndocOp, UndocOp, UndocOp, AddCarryZpIndex, RotateRightZpIndex, UndocOp, SetInterruptDisable, /* FIXME AddCarrAbsIndexY */UndocOp, UndocOp, UndocOp, UndocOp, AddCarryAbsIndexX, /* FIXME RotateRightAbsIndexX */UndocOp, UndocOp,
-UndocOp, StoreAccIndexInd, UndocOp, UndocOp, StoreYZp, StoreAccZp, StoreXZp, UndocOp, DecrementY, UndocOp, TransferXToAcc, UndocOp, StoreYAbs, StoreAccAbs, StoreXAbs, UndocOp,
-BranchCarryClear, StoreAccIndIndex, UndocOp, UndocOp, StoreYZpIndex, StoreAccZpIndex, StoreXZpIndex, UndocOp, TransferYToAcc, StoreAccAbsIndexY, TransferXToStack, UndocOp, UndocOp, StoreAccAbsIndexX, UndocOp, UndocOp,
-LoadYImm, LoadAccIndexInd, LoadXImm, UndocOp, LoadYZp, LoadAccZp, LoadXZp, UndocOp, TransferAccToY, LoadAccImm, TransferAccToX, UndocOp, LoadYAbs, LoadAccAbs, LoadXAbs, UndocOp,
-BranchCarrySet, LoadAccIndIndex, UndocOp, UndocOp, LoadYZpIndex, LoadAccZpIndex, LoadXZpIndex, UndocOp, ClearOverflow, LoadAccAbsIndexY, TransferStackToX, UndocOp, LoadYAbsIndex, LoadAccAbsIndexX, LoadXAbsIndex, UndocOp,
-CmpYImm, CmpAccIndexInd, UndocOp, UndocOp, CmpYZp, CmpAccZp, /* FIXME DecrementZp */UndocOp, UndocOp, IncrementY, CmpAccImm, DecrementX, UndocOp, CmpYAbs, CmpAccAbs, /* FIXME DecrementAbs */UndocOp, UndocOp,
-BranchNotZero, CmpAccIndIndex, UndocOp, UndocOp, UndocOp, CmpAccZpIndex, DecrementMemZpIndex, UndocOp, ClearDecimal, CmpAccAbsIndexY, UndocOp, UndocOp, UndocOp, CmpAccAbsIndexX, DecrementMemAbsIndex, UndocOp,
-CmpXImm, SubtractAccMemIndexInd, UndocOp, UndocOp, CmpXZp, SubtractAccMemZp, IncrementMemZp, UndocOp, IncrementX, SubtractAccMemImm, NoOperation, UndocOp, CmpXAbs, SubtractAccMemAbs, UndocOp, IncrementMemAbs, UndocOp,
-BranchZero, SubtractAccMemIndIndex, UndocOp, UndocOp, UndocOp, SubtractAccMemZpIndex, IncrementMemZpIndex, UndocOp, SetDecimal, /* FIXME SubtractAccMemAbsIndexY */UndocOp, UndocOp, UndocOp, UndocOp, /* FIXME SubtractAccMemAbsIndexX */UndocOp, IncrementMemAbsIndex, UndocOp
+/*     0                      1                    2        3        4                5                     6                    7                     8                   9                     A                  B           C                D                     E                     F*/
+/*0*/Break,             OrAccMemIndexInd,       UndocOp,  UndocOp, UndocOp,       OrAccMemZp,            ShlZp,               UndocOp,           PushProgramCounter,  OrAccMemImm,             ShlAcc,           UndocOp,    UndocOp,       OrAccMemAbs,             ShlAbs,               UndocOp,
+/*1*/BranchNotNegative, OrAccMemIndIndex,       UndocOp,  UndocOp, UndocOp,       OrAccMemZpIndex,       ShlZpIndex,          UndocOp,           ClearCarry,          OrAccMemAbsIndexY,       UndocOp,          UndocOp,    UndocOp,       OrAccMemAbsIndexX,       ShlAbsIndex,          UndocOp,
+/*2*/JumpSubroutine,    AndIndexInd,            UndocOp,  UndocOp, BitTestZp,     AndZp,                 RotateLeftZp,        UndocOp,           PopProgramCounter,   AndImm,                  RotateLeftAcc,    UndocOp,    BitTestAbs,    AndAbs,                  RotateLeftAbs,        UndocOp,
+/*3*/BranchNegative,    AndIndIndex,            UndocOp,  UndocOp, UndocOp,       AndZpIndex,            RotateLeftZpIndex,   UndocOp,           SetCarry,            AndAbsIndexY,            UndocOp,          UndocOp,    UndocOp,       AndAbsIndexX,            RotateLeftAbsIndex,   UndocOp,
+/*4*/ReturnInterrupt,   XorAccMemIndexInd,      UndocOp,  UndocOp, UndocOp,       XorAccMemZp,           ShrZp,               UndocOp,           PushAcc,             XorAccMemImm,            ShrAcc,           UndocOp,    JumpAbs,       XorAccMemAbs,            ShrAbs,               UndocOp,
+/*5*/BranchNoOverflow,  XorAccMemIndIndex,      UndocOp,  UndocOp, UndocOp,       XorAccMemZpIndex,      ShrZpIndex,          UndocOp,           ClearInterrupts,     XorAccMemAbsIndexY,      UndocOp,          UndocOp,    UndocOp,       XorAccMemAbsIndexX,      ShrAbsIndex,          UndocOp,
+/*6*/ReturnSubroutine,  AddCarryIndexInd,       UndocOp,  UndocOp, UndocOp,       AddCarryZp,            RotateRightZp,       UndocOp,           PopAcc,              AddCarryImm,             RotateRightAcc,   UndocOp,    JumpInd,       AddCarryAbs,             RotateRightAbs,       UndocOp,
+/*7*/BranchOverflow,    AddCarryIndIndex,       UndocOp,  UndocOp, UndocOp,       AddCarryZpIndex,       RotateRightZpIndex,  UndocOp,           SetInterruptDisable, AddCarryAbsIndexY,       UndocOp,          UndocOp,    UndocOp,       AddCarryAbsIndexX,       RotateRightAbsIndex,  UndocOp,
+/*8*/UndocOp,           StoreAccIndexInd,       UndocOp,  UndocOp, StoreYZp,      StoreAccZp,            StoreXZp,            UndocOp,           DecrementY,          UndocOp,                 TransferXToAcc,   UndocOp,    StoreYAbs,     StoreAccAbs,             StoreXAbs,            UndocOp,
+/*9*/BranchCarryClear,  StoreAccIndIndex,       UndocOp,  UndocOp, StoreYZpIndex, StoreAccZpIndex,       StoreXZpIndex,       UndocOp,           TransferYToAcc,      StoreAccAbsIndexY,       TransferXToStack, UndocOp,    UndocOp,       StoreAccAbsIndexX,       UndocOp,              UndocOp,
+/*A*/LoadYImm,          LoadAccIndexInd,        LoadXImm, UndocOp, LoadYZp,       LoadAccZp,             LoadXZp,             UndocOp,           TransferAccToY,      LoadAccImm,              TransferAccToX,   UndocOp,    LoadYAbs,      LoadAccAbs,              LoadXAbs,             UndocOp,
+/*B*/BranchCarrySet,    LoadAccIndIndex,        UndocOp,  UndocOp, LoadYZpIndex,  LoadAccZpIndex,        LoadXZpIndex,        UndocOp,           ClearOverflow,       LoadAccAbsIndexY,        TransferStackToX, UndocOp,    LoadYAbsIndex, LoadAccAbsIndexX,        LoadXAbsIndex,        UndocOp,
+/*C*/CmpYImm,           CmpAccIndexInd,         UndocOp,  UndocOp, CmpYZp,        CmpAccZp,              DecrementMemZp,      UndocOp,           IncrementY,          CmpAccImm,               DecrementX,       UndocOp,    CmpYAbs,       CmpAccAbs,               DecrementMemAbs,      UndocOp,
+/*D*/BranchNotZero,     CmpAccIndIndex,         UndocOp,  UndocOp, UndocOp,       CmpAccZpIndex,         DecrementMemZpIndex, UndocOp,           ClearDecimal,        CmpAccAbsIndexY,         UndocOp,          UndocOp,    UndocOp,       CmpAccAbsIndexX,         DecrementMemAbsIndex, UndocOp,
+/*E*/CmpXImm,           SubtractAccMemIndexInd, UndocOp,  UndocOp, CmpXZp,        SubtractAccMemZp,      IncrementMemZp,      UndocOp,           IncrementX,          SubtractAccMemImm,       NoOperation,      UndocOp,    CmpXAbs,       SubtractAccMemAbs,       IncrementMemAbs,      UndocOp,
+/*F*/BranchZero,        SubtractAccMemIndIndex, UndocOp,  UndocOp, UndocOp,       SubtractAccMemZpIndex, IncrementMemZpIndex, UndocOp,           SetDecimal,          SubtractAccMemAbsIndexY, UndocOp,          UndocOp,    UndocOp,       SubtractAccMemAbsIndexX, IncrementMemAbsIndex, UndocOp
 };
 
 unsigned int CPUInit( unsigned char* ramPtr )
@@ -1153,11 +1222,9 @@ void CPUInterrupt( e6502_t *cpu )
 		switch( cpu->statusInterrupt )
 		{
 		case NMI_LEVEL:
-			//ProgramCounter = ( ram[0xFFFA] ) + ( ram[0xFFFB] << 8 );
 			cpu->pCounter = ReadWord( cpu->memory, 0xFFFA );
 			break;
 		case IRQ_LEVEL:
-			//ProgramCounter = ( ram[0xFFFE] ) + ( ram[0xFFFF] << 8 );
 			cpu->pCounter = ReadWord( cpu->memory, 0xFFFE );
 			break;
 		default:
