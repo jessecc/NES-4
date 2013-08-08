@@ -8,8 +8,70 @@
 #include "Error.h"
 #include "MemoryInterface.h"
 
-static int clockCount;
-struct e6502_t *CurrentCpu = NULL;
+/* What's this for? */
+/*static int clockCount;
+struct e6502_t *CurrentCpu = NULL;*/
+
+/* Helper macros */
+/* These could probably be used in some existing opcodes, but I'm leaving well enough alone */
+/* -sigkill */
+
+/* Change a given ith least significant bit of b to (bool)v, returning the result */
+#define pokebt( b, i, v )	( ( v ) ? ( b ) | ( 0x01 << ( i ) ) : ( b ) & ( ~ ( 0x01 << ( i ) ) ) )
+
+/* Grab the ith least significant bit of b and return it */
+#define grabbt( b, i )		( ( ( b ) >> ( i ) ) & 0x01 )
+
+inline BYTE PackFlags( e6502_t *cpu );
+inline void UnpackFlags( e6502_t *cpu, BYTE flags );
+
+/* Pack the flags of a e6502_t into a byte */
+inline BYTE PackFlags( e6502_t *cpu )
+{
+	BYTE flags = 0x00;
+	
+	flags = pokebt( flags, 0, cpu->statusCarry );
+	flags = pokebt( flags, 1, cpu->statusZero );
+	flags = pokebt( flags, 2, cpu->statusInterrupt );
+	flags = pokebt( flags, 3, cpu->statusDec );
+	flags = pokebt( flags, 4, cpu->statusBreak );
+	flags = pokebt( flags, 5, true ); //cpu->statusUnk
+	flags = pokebt( flags, 6, cpu->statusOverflow );
+	flags = pokebt( flags, 7, cpu->statusNeg );
+	
+	return flags;
+}
+
+/* Unpack a flags register byte into a e6502_t structure */
+inline void UnpackFlags( e6502_t *cpu, BYTE flags )
+{
+	cpu->statusCarry = grabbt( flags, 0 );
+	cpu->statusZero = grabbt( flags, 1 );
+	cpu->statusInterrupt = grabbt( flags, 2 );
+	cpu->statusDec = grabbt( flags, 3 );
+	cpu->statusBreak = grabbt( flags, 4 );
+	//cpu->statusUnk = grabbt( flags, 5 ); cpu->statusUnk = true;
+	cpu->statusOverflow = grabbt( flags, 6 );
+	cpu->statusNeg = grabbt( flags, 7 );
+}
+
+/* Memo to Afrika: Put these somewhere appropriate, I don't trust myself */
+
+/* PHP */
+static void PushStatus( e6502_t *cpu )
+{
+	/* Pack and push flags register */
+	StackPush( cpu, PackFlags( cpu ) );
+}
+
+/* PLP */
+static void PopStatus( e6502_t *cpu )
+{
+	/* Pop and unpack flags register */
+	BYTE flags;
+	StackPop( cpu, &flags );
+	UnpackFlags( cpu, flags );
+}
 
 static void Jam( e6502_t *cpu )
 {
@@ -365,12 +427,18 @@ static void BranchNotNegative( e6502_t *cpu )
 
 static void Break( e6502_t *cpu )
 {
+	/* Push address */
 	StackPush( cpu, ( cpu->pCounter >> 8 ) & 0xFF );
 	StackPush( cpu, cpu->pCounter & 0xFF );
-	cpu->broke = 1;
-	StackPush( cpu, ( cpu->statusNeg << 7 ) | ( cpu->statusOverflow << 6 ) | ( 1 << 5 ) | ( cpu->broke << 4 ) | ( cpu->statusDec << 3 ) | ( cpu->hasInterrupts << 2 ) | ( cpu->statusZero << 1 ) | cpu->statusCarry );
+	
+	/* Set break to true, indicating a BRK or PHP (and not an IRQ or NMI) */
+	cpu->statusBreak = true;
+	
+	/* Push flags register */
+	PushStatus( cpu );
+	
+	/* Jump to interrupt routine */
 	cpu->pCounter = ReadWord( cpu->memory, 0xFFFE );
-	cpu->statusInterrupt = 1;
 }
 
 static void BranchNoOverflow( e6502_t *cpu )
@@ -966,16 +1034,10 @@ static void RotateRightBase( e6502_t *cpu, WORD dataAddr, BYTE data )
 
 static void ReturnInterrupt( e6502_t *cpu )
 {
-	BYTE sr;
-	StackPop( cpu, &sr );
-	cpu->statusNeg = ( sr & 0x80 ) >> 7;
-	cpu->statusOverflow = ( sr & 0x40 ) >> 6;
-	cpu->statusUnk = ( sr & 20 ) >> 5;
-	cpu->broke = ( sr & 0x10 ) >> 4;
-	cpu->statusDec = ( sr & 0x8 ) >> 3;
-	cpu->statusInterrupt = ( sr & 0x4 ) >> 2;
-	cpu->statusZero = ( sr & 0x2 ) >> 1;
-	cpu->statusCarry = ( sr & 0x1 );
+	/* Pop the flags register and repopulate it */
+	PopStatus( cpu );
+	
+	/* Pop the return address */
 	StackPop( cpu, (BYTE*)&cpu->pCounter+1 );
 	StackPop( cpu, (BYTE*)&cpu->pCounter );
 }
