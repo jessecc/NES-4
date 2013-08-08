@@ -80,7 +80,7 @@ void CpuStep( e6502_t *cpu ){
 
 	CPUExecute( cpu, opcode );
 
-	if ( cpu->hasInterrupts )
+	if ( cpu->statusInterrupt )
 		CPUInterrupt( cpu );
 }
 
