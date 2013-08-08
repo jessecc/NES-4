@@ -917,12 +917,12 @@ static void PushAcc( e6502_t *cpu )
 	cpu->pCounter++;
 }
 
-static void PushProgramCounter( e6502_t *cpu )
+/*static void PushProgramCounter( e6502_t *cpu )
 {
 	StackPush( cpu, ( cpu->pCounter >> 8 ) & 0xFF );
 	StackPush( cpu, cpu->pCounter & 0xFF );
 	cpu->pCounter++;
-}
+}*/
 
 static void PopAcc( e6502_t *cpu )
 {
@@ -930,11 +930,11 @@ static void PopAcc( e6502_t *cpu )
 	cpu->pCounter++;
 }
 
-static void PopProgramCounter( e6502_t *cpu )
+/*static void PopProgramCounter( e6502_t *cpu )
 {
 	StackPop( cpu, (BYTE*)&cpu->pCounter );
 	StackPop( cpu, (BYTE*)&cpu->pCounter+1 );
-}
+}*/
 
 static void RotateLeftAcc( e6502_t *cpu )
 {
@@ -1237,9 +1237,9 @@ static void TransferBase( e6502_t *cpu, BYTE* dataDest, BYTE data )
 void (*FunctionTable[0x100])() = 
 {
 /*     0                      1                    2        3        4                5                     6                    7                     8                   9                     A                  B           C                D                     E                     F*/
-/*0*/Break,             OrAccMemIndexInd,       UndocOp,  UndocOp, UndocOp,       OrAccMemZp,            ShlZp,               UndocOp,           PushProgramCounter,  OrAccMemImm,             ShlAcc,           UndocOp,    UndocOp,       OrAccMemAbs,             ShlAbs,               UndocOp,
+/*0*/Break,             OrAccMemIndexInd,       UndocOp,  UndocOp, UndocOp,       OrAccMemZp,            ShlZp,               UndocOp,           PushStatus,          OrAccMemImm,             ShlAcc,           UndocOp,    UndocOp,       OrAccMemAbs,             ShlAbs,               UndocOp,
 /*1*/BranchNotNegative, OrAccMemIndIndex,       UndocOp,  UndocOp, UndocOp,       OrAccMemZpIndex,       ShlZpIndex,          UndocOp,           ClearCarry,          OrAccMemAbsIndexY,       UndocOp,          UndocOp,    UndocOp,       OrAccMemAbsIndexX,       ShlAbsIndex,          UndocOp,
-/*2*/JumpSubroutine,    AndIndexInd,            UndocOp,  UndocOp, BitTestZp,     AndZp,                 RotateLeftZp,        UndocOp,           PopProgramCounter,   AndImm,                  RotateLeftAcc,    UndocOp,    BitTestAbs,    AndAbs,                  RotateLeftAbs,        UndocOp,
+/*2*/JumpSubroutine,    AndIndexInd,            UndocOp,  UndocOp, BitTestZp,     AndZp,                 RotateLeftZp,        UndocOp,           PopStatus,           AndImm,                  RotateLeftAcc,    UndocOp,    BitTestAbs,    AndAbs,                  RotateLeftAbs,        UndocOp,
 /*3*/BranchNegative,    AndIndIndex,            UndocOp,  UndocOp, UndocOp,       AndZpIndex,            RotateLeftZpIndex,   UndocOp,           SetCarry,            AndAbsIndexY,            UndocOp,          UndocOp,    UndocOp,       AndAbsIndexX,            RotateLeftAbsIndex,   UndocOp,
 /*4*/ReturnInterrupt,   XorAccMemIndexInd,      UndocOp,  UndocOp, UndocOp,       XorAccMemZp,           ShrZp,               UndocOp,           PushAcc,             XorAccMemImm,            ShrAcc,           UndocOp,    JumpAbs,       XorAccMemAbs,            ShrAbs,               UndocOp,
 /*5*/BranchNoOverflow,  XorAccMemIndIndex,      UndocOp,  UndocOp, UndocOp,       XorAccMemZpIndex,      ShrZpIndex,          UndocOp,           ClearInterrupts,     XorAccMemAbsIndexY,      UndocOp,          UndocOp,    UndocOp,       XorAccMemAbsIndexX,      ShrAbsIndex,          UndocOp,
