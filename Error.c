@@ -9,20 +9,19 @@
 unsigned int globalError;
 unsigned int errorLevel;
 
-/*
 char *errorMessages[] = {
 	"Success!",
 	"No Memory!",
-	"Invalid Pointer!"
+	"Invalid Pointer!",
+	"No File"
 };
 
 char *levelString[] = {
 	"Warning",
 	"Error", 
 	"Fatal",
-	"None"
+	"No File"
 };
-*/
 
 
 void ErrorExit( )
@@ -33,7 +32,7 @@ void ErrorExit( )
 
 void ShowLastError( )
 {
-	//printf( "%s: %s\n", levelString[errorLevel], errorMessages[globalError] );
+	printf( "%s: %s\n", levelString[errorLevel], errorMessages[globalError] );
 }
 
 void SetError( unsigned int errLvl, unsigned int err )
