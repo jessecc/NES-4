@@ -15,6 +15,20 @@ typedef enum { false, true } bool;
 
 #define new( n ) calloc( 1, sizeof( n ) );
 
+/* Memory interface structure.
+ * This needs to be constructed externally and passed into the e6502_t structure somehow.
+ * It's used by the primitizes in MemoryInterface.c.
+ * The memory array provides a buffer of arbitrary size; the map function maps a 64k address space onto that buffer.
+ * The map function takes a BYTE array (usually the memory array) and an address. It is permitted to return NULL,
+ * if the address requested isn't readable or writable. This could be expanded a little by maybe having a
+ * readMap AND a writeMap function, which would allow one to emulate true ROM. That can be dealth with later though.
+ * -sigkill */
+typedef struct minterface
+{
+	BYTE *memory;
+	BYTE *(*map)(BYTE *, WORD);
+} minterface_t;
+
 typedef struct e6502
 {
 	BYTE	accumulator;
@@ -32,7 +46,7 @@ typedef struct e6502
 	FLAG	statusOverflow	:1;
 	FLAG	statusNeg		:1;
 	
-	BYTE	*memory;	
+	minterface_t memory;
 } e6502_t;
 
 #endif
