@@ -30,12 +30,11 @@
 #define CMD_STR_9				   "quit"
 #define CMD_STR_10				"ni"
 
-typedef struct
-{
-	struct breakpoint_t* next;
-	WORD address;
-	BYTE number;
-}breakpoint_t;
+typedef struct {
+    struct breakpoint_t* next;
+    WORD address;
+    BYTE number;
+} breakpoint_t;
 
 breakpoint_t* breakpointList;
 breakpoint_t* lastbreakpoint;

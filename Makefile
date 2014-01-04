@@ -16,4 +16,7 @@ clean:
 	rm *.o
 	rm $(FINALBIN)
 
+style:
+	astyle --style=linux *.c *.h
+
 .PHONY: all

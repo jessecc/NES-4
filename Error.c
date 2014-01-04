@@ -10,44 +10,44 @@ unsigned int globalError;
 unsigned int errorLevel;
 
 char *errorMessages[] = {
-	"Success!",
-	"No Memory!",
-	"Invalid Pointer!",
-	"No File"
+    "Success!",
+    "No Memory!",
+    "Invalid Pointer!",
+    "No File"
 };
 
 char *levelString[] = {
-	"Warning",
-	"Error", 
-	"Fatal",
-	"No File"
+    "Warning",
+    "Error",
+    "Fatal",
+    "No File"
 };
 
 
 void ErrorExit( )
 {
-	ShowLastError();
-	exit( globalError );
+    ShowLastError();
+    exit( globalError );
 }
 
 void ShowLastError( )
 {
-	printf( "%s: %s\n", levelString[errorLevel], errorMessages[globalError] );
+    printf( "%s: %s\n", levelString[errorLevel], errorMessages[globalError] );
 }
 
 void SetError( unsigned int errLvl, unsigned int err )
 {
-	//SetErrorLevel( errLvl );
-	errorLevel = errLvl;
-	globalError = err;
+    //SetErrorLevel( errLvl );
+    errorLevel = errLvl;
+    globalError = err;
 }
 
 unsigned int GetErrorLevel( )
 {
-	return errorLevel;
+    return errorLevel;
 }
 
-void ClearError( ) 
+void ClearError( )
 {
-	SetError( NONE_LEVEL, ERROR_SUCCESS );
+    SetError( NONE_LEVEL, ERROR_SUCCESS );
 }

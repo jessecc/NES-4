@@ -19,108 +19,105 @@
 
 unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 {
-	//BYTE *ram;
-	minterface_t *ram;
-	
-	int i;
-   long int romSize;
-	FILE *fp = NULL;
+    //BYTE *ram;
+    minterface_t *ram;
 
-	/*Allocate various structures and the like*/
-	if( args->ramSize >= RAM_SIZE_MAX || args->ramSize <= ( DEFAULT_RAM_SIZE / 2 ) )
-	{
-		DbgPrint( "RAM sized to default due to illegal size" );
-		args->ramSize = DEFAULT_RAM_SIZE;
-	}
+    int i;
+    long int romSize;
+    FILE *fp = NULL;
 
-	//ram = new( BYTE[ args->ramSize ]);
-	ram = new( minterface_t );
+    /*Allocate various structures and the like*/
+    if( args->ramSize >= RAM_SIZE_MAX || args->ramSize <= ( DEFAULT_RAM_SIZE / 2 ) ) {
+        DbgPrint( "RAM sized to default due to illegal size" );
+        args->ramSize = DEFAULT_RAM_SIZE;
+    }
 
-	if( !ram )
-	{
-		SetError( FATAL_LEVEL, ERROR_NOMEM );
-		return 1;
-	}
-	ram->memory = new( BYTE[ args->ramSize ]);
-	ram->map = map_nes;
-	//printf( "[EmulationInit] ram->memory: 0x%x\n", ram->memory );
+    //ram = new( BYTE[ args->ramSize ]);
+    ram = new( minterface_t );
 
-	if( CPUInit( ram ) != ERROR_SUCCESS )
-	{
-		/*We don't need to set an error here because the 6502CPUInit function will have done this already*/
-		return 1;
-	}
+    if( !ram ) {
+        SetError( FATAL_LEVEL, ERROR_NOMEM );
+        return 1;
+    }
+    ram->memory = new( BYTE[ args->ramSize ]);
+    ram->map = map_nes;
+    //printf( "[EmulationInit] ram->memory: 0x%x\n", ram->memory );
 
-	if (( fp = fopen( args->filename, "r" )) == NULL ){
-		SetError( FATAL_LEVEL, ERROR_NOFILE );
-		return 1;
-	}
+    if( CPUInit( ram ) != ERROR_SUCCESS ) {
+        /*We don't need to set an error here because the 6502CPUInit function will have done this already*/
+        return 1;
+    }
 
-	// read input file into emulator's ram
-	fread( ram->memory + args->offset, args->ramSize - args->offset, 1, fp );
+    if (( fp = fopen( args->filename, "r" )) == NULL ) {
+        SetError( FATAL_LEVEL, ERROR_NOFILE );
+        return 1;
+    }
 
-	// Initialize emulator structure
-	em->ramSize = args->ramSize;
-	//em->ram = ram;
-	em->filename = strdup( args->filename );
-	em->fp = fp;
+    // read input file into emulator's ram
+    fread( ram->memory + args->offset, args->ramSize - args->offset, 1, fp );
 
-	em->Cpus = new( e6502_t[args->cpuNo] );
-   if( !(em->Cpus) )
-   {
-      return ERROR_NOMEM;
-   }
-	em->cpuNo = args->cpuNo;
-	for ( i = 0; i < args->cpuNo; i++ ){
-		em->Cpus[i].memory = ram;
-		/*
-		printf( "[EmulationInit] cpu %d->memory: 0x%x, cpu %d->memory->memory: 0x%x\n",
-				i, em->Cpus[i].memory, i, em->Cpus[i].memory->memory );
-				*/
-	}
+    // Initialize emulator structure
+    em->ramSize = args->ramSize;
+    //em->ram = ram;
+    em->filename = strdup( args->filename );
+    em->fp = fp;
 
-	em->Devices = NULL;
-	em->Debugging = args->debugEnable;
+    em->Cpus = new( e6502_t[args->cpuNo] );
+    if( !(em->Cpus) ) {
+        return ERROR_NOMEM;
+    }
+    em->cpuNo = args->cpuNo;
+    for ( i = 0; i < args->cpuNo; i++ ) {
+        em->Cpus[i].memory = ram;
+        /*
+        printf( "[EmulationInit] cpu %d->memory: 0x%x, cpu %d->memory->memory: 0x%x\n",
+        		i, em->Cpus[i].memory, i, em->Cpus[i].memory->memory );
+        		*/
+    }
 
-	/*In case of Video or other peripherial devices do a start up for them too*/
-	/*return on error*/
-	return ERROR_SUCCESS;
+    em->Devices = NULL;
+    em->Debugging = args->debugEnable;
+
+    /*In case of Video or other peripherial devices do a start up for them too*/
+    /*return on error*/
+    return ERROR_SUCCESS;
 }
 
-void CpuStep( e6502_t *cpu ){
-	BYTE opcode = 0x00;
-	opcode = ReadByte( cpu->memory, cpu->pCounter++ );
+void CpuStep( e6502_t *cpu )
+{
+    BYTE opcode = 0x00;
+    opcode = ReadByte( cpu->memory, cpu->pCounter++ );
 
-	CPUExecute( cpu, opcode );
+    CPUExecute( cpu, opcode );
 
-	if ( cpu->statusInterrupt )
-		CPUInterrupt( cpu );
+    if ( cpu->statusInterrupt )
+        CPUInterrupt( cpu );
 }
 
-void EmulationStep( Emulator_t *em ){
-	int i;
-	for ( i = 0; i < em->cpuNo; i++ )
-		CpuStep( &em->Cpus[i] );
-	
+void EmulationStep( Emulator_t *em )
+{
+    int i;
+    for ( i = 0; i < em->cpuNo; i++ )
+        CpuStep( &em->Cpus[i] );
+
 }
 
 void EmulationStart( Emulator_t *em )
 {
-	//int cyclesLeft = 0;		/*Should be calcuated or something.  I don't know...*/
-	em->running = true;
+    //int cyclesLeft = 0;		/*Should be calcuated or something.  I don't know...*/
+    em->running = true;
 
-	while( em->running )
-	{
-		EmulationStep( em );
-	}
+    while( em->running ) {
+        EmulationStep( em );
+    }
 }
 
-unsigned int EmulationCleanup( Emulator_t *em ) 
+unsigned int EmulationCleanup( Emulator_t *em )
 {
-	/*Free dat rams and such*/
+    /*Free dat rams and such*/
 
-	//free( em->ram );
-	free( em );
+    //free( em->ram );
+    free( em );
 
-	/*Do other cleanup*/
+    /*Do other cleanup*/
 }
