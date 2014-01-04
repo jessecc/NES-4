@@ -4,9 +4,9 @@
 #include <string.h>
 
 /*Local Includes*/
-#include "6502CPU.h"
-#include "Error.h"
-#include "MemoryInterface.h"
+#include <6502CPU.h>
+#include <Error.h>
+#include <MemoryInterface.h>
 
 /* What's this for? */
 /*static int clockCount;

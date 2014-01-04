@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -g
+CFLAGS=-g -I$(shell pwd)/include
 FINALBIN=NES
 
 all: makestuff

@@ -1,4 +1,4 @@
-#include "nesdb.h"
+#include <nesdb.h>
 
 int bfid_initialized = 0;
 int interrupted = 0;

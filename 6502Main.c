@@ -5,9 +5,9 @@
 #include <stdarg.h>
 
 /*Local Includes*/
-#include "Error.h"
-#include "6502Emu.h"
-#include "GenericTypes.h"
+#include <Error.h>
+#include <6502Emu.h>
+#include <GenericTypes.h>
 
 void Usage( char** argv )
 {

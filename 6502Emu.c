@@ -4,13 +4,13 @@
 #include <string.h>
 
 /*Local Includes*/
-#include "6502Emu.h"
-#include "6502CPU.h"
-#include "6502Cycles.h"
-#include "GenericTypes.h"
-#include "Error.h"
-#include "Debug.h"
-#include "MemoryInterface.h"
+#include <6502Emu.h>
+#include <6502CPU.h>
+#include <6502Cycles.h>
+#include <GenericTypes.h>
+#include <Error.h>
+#include <Debug.h>
+#include <MemoryInterface.h>
 
 /*Defines and defaults*/
 #define DEFAULT_RAM_SIZE	0xffff	//4K of RAM

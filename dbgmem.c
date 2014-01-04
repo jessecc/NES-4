@@ -1,4 +1,4 @@
-#include "nesdb.h"
+#include <nesdb.h>
 
 int bfid_peek( Emulator_t *dem, int argc, char **argv )
 {

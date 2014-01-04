@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "nesdb.h"
+#include <nesdb.h>
 
 int dbg_printmem( Emulator_t *dem, int argc, char **argv )
 {
