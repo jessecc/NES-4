@@ -3,8 +3,8 @@
 
 #include <GenericTypes.h>
 //BYTE* ram = NULL;
-//DWORD ramSize;
-//static DWORD debugEnable;
+//uint32_t ramSize;
+//static uint32_t debugEnable;
 struct device;
 
 typedef struct arg_s {
@@ -15,7 +15,7 @@ typedef struct arg_s {
     unsigned int offset;
     char *filename;
 
-    DWORD debugFlags;
+    uint32_t debugFlags;
 } arg_s_t;
 
 typedef struct Emulator {

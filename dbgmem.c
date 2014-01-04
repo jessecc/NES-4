@@ -34,7 +34,7 @@ int bfid_poke( Emulator_t *dem, int argc, char **argv )
     }
 
     //dem->ram[ where ] = val;
-    WriteByte( dem->Cpus[0].memory, where );
+    WriteByte( dem->Cpus[0].memory, where, (char)val );
     return 0;
 }
 

@@ -3,10 +3,14 @@
 
 #include <stdint.h>
 
+#include <MemoryInterface.h>
+
+/*
 typedef uint8_t   BYTE;
 typedef uint16_t  WORD;
 typedef uint32_t  DWORD;
 typedef unsigned int FLAG;
+*/
 typedef enum { false, true } bool;
 
 #define BYTE_MAX  0xff
@@ -19,32 +23,29 @@ typedef enum { false, true } bool;
  * This needs to be constructed externally and passed into the e6502_t structure somehow.
  * It's used by the primitizes in MemoryInterface.c.
  * The memory array provides a buffer of arbitrary size; the map function maps a 64k address space onto that buffer.
- * The map function takes a BYTE array (usually the memory array) and an address. It is permitted to return NULL,
+ * The map function takes a uint8_t array (usually the memory array) and an address. It is permitted to return NULL,
  * if the address requested isn't readable or writable. This could be expanded a little by maybe having a
  * readMap AND a writeMap function, which would allow one to emulate true ROM. That can be dealth with later though.
  * -sigkill */
-typedef struct minterface {
-    BYTE *memory;
-    BYTE *(*map)(BYTE *, WORD);
-} minterface_t;
 
 typedef struct e6502 {
-    BYTE	accumulator;
-    BYTE	xIndex;
-    BYTE	yIndex;
-    WORD	pCounter;
-    BYTE	sPointer;
+    uint8_t	accumulator;
+    uint8_t	xIndex;
+    uint8_t	yIndex;
+    uint16_t	pCounter;
+    uint8_t	sPointer;
 
-    FLAG	statusCarry		:1;
-    FLAG	statusZero		:1;
-    FLAG	statusInterrupt	:1;
-    FLAG	statusDec		:1;
-    FLAG	statusBreak		:1; //Not real. When pushed to the stack: true for a BRK or PHP instruction, false for an IRQ or NMI
-    //FLAG	statusUnk		:1; //Always true
-    FLAG	statusOverflow	:1;
-    FLAG	statusNeg		:1;
+    unsigned int	statusCarry		:1;
+    unsigned int	statusZero		:1;
+    unsigned int	statusInterrupt	:1;
+    unsigned int	statusDec		:1;
+    unsigned int	statusBreak		:1; //Not real. When pushed to the stack: true for a BRK or PHP instruction, false for an IRQ or NMI
+    //unsigned int	statusUnk		:1; //Always true
+    unsigned int	statusOverflow	:1;
+    unsigned int	statusNeg		:1;
 
-    minterface_t *memory;
+    minterface_t 	*memory;
 } e6502_t;
+
 
 #endif

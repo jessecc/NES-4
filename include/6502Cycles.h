@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <GenericTypes.h>
 
-BYTE cycleTable[] = {
+uint8_t cycleTable[] = {
     7,6,2,8,3,3,5,5,3,2,2,2,4,4,6,6,
     2,5,2,8,4,4,6,6,2,4,2,7,5,5,7,7,
     6,6,2,8,3,3,5,5,4,2,2,2,4,4,6,6,

@@ -9,7 +9,7 @@
 #include <6502Cycles.h>
 #include <GenericTypes.h>
 #include <Error.h>
-#include <Debug.h>
+//#include <Debug.h>
 #include <MemoryInterface.h>
 
 /*Defines and defaults*/
@@ -19,7 +19,7 @@
 
 unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 {
-    //BYTE *ram;
+    //uint8_t *ram;
     minterface_t *ram;
 
     int i;
@@ -32,14 +32,14 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
         args->ramSize = DEFAULT_RAM_SIZE;
     }
 
-    //ram = new( BYTE[ args->ramSize ]);
+    //ram = new( uint8_t[ args->ramSize ]);
     ram = new( minterface_t );
 
     if( !ram ) {
         SetError( FATAL_LEVEL, ERROR_NOMEM );
         return 1;
     }
-    ram->memory = new( BYTE[ args->ramSize ]);
+    ram->memory = new( uint8_t[ args->ramSize ]);
     ram->map = map_nes;
     //printf( "[EmulationInit] ram->memory: 0x%x\n", ram->memory );
 
@@ -85,7 +85,7 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 
 void CpuStep( e6502_t *cpu )
 {
-    BYTE opcode = 0x00;
+    uint8_t opcode = 0x00;
     opcode = ReadByte( cpu->memory, cpu->pCounter++ );
 
     CPUExecute( cpu, opcode );

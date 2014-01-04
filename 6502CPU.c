@@ -22,13 +22,13 @@ struct e6502_t *CurrentCpu = NULL;*/
 /* Grab the ith least significant bit of b and return it */
 #define grabbt( b, i )		(((b) >> (i)) & 0x01)
 
-inline BYTE PackFlags( e6502_t *cpu );
-inline void UnpackFlags( e6502_t *cpu, BYTE flags );
+inline uint8_t PackFlags( e6502_t *cpu );
+inline void UnpackFlags( e6502_t *cpu, uint8_t flags );
 
 /* Pack the flags of a e6502_t into a byte */
-inline BYTE PackFlags( e6502_t *cpu )
+inline uint8_t PackFlags( e6502_t *cpu )
 {
-    BYTE flags = 0x00;
+    uint8_t flags = 0x00;
 
     flags = pokebt( flags, 0, cpu->statusCarry );
     flags = pokebt( flags, 1, cpu->statusZero );
@@ -43,7 +43,7 @@ inline BYTE PackFlags( e6502_t *cpu )
 }
 
 /* Unpack a flags register byte into a e6502_t structure */
-inline void UnpackFlags( e6502_t *cpu, BYTE flags )
+inline void UnpackFlags( e6502_t *cpu, uint8_t flags )
 {
     cpu->statusCarry = grabbt( flags, 0 );
     cpu->statusZero = grabbt( flags, 1 );
@@ -68,7 +68,7 @@ static void PushStatus( e6502_t *cpu )
 static void PopStatus( e6502_t *cpu )
 {
     /* Pop and unpack flags register */
-    BYTE flags;
+    uint8_t flags;
     StackPop( cpu, &flags );
     UnpackFlags( cpu, flags );
 }
@@ -87,65 +87,65 @@ static void UndocOp( e6502_t *cpu )
 
 static void AddCarryImm( e6502_t *cpu )
 {
-    BYTE data = ReadByte( cpu->memory, cpu->pCounter++ );		/*Post inc says PC now points to next opcode*/
+    uint8_t data = ReadByte( cpu->memory, cpu->pCounter++ );		/*Post inc says PC now points to next opcode*/
     AddCarryBase( cpu, data );
 }
 
 static void AddCarryZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AddCarryBase( cpu, data );
 }
 
 static void AddCarryZpIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AddCarryBase( cpu, data );
 }
 
 static void AddCarryAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AddCarryBase( cpu, data );
     cpu->pCounter += 2;
 }
 
 static void AddCarryAbsIndexX( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AddCarryBase( cpu, data );
     cpu->pCounter += 2;
 }
 
 static void AddCarryAbsIndexY( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->yIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->yIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AddCarryBase( cpu, data );
     cpu->pCounter +=2 ;
 }
 
 static void AddCarryIndexInd( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AddCarryBase( cpu, data );
 }
 
 static void AddCarryIndIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) );
-    BYTE data = ReadByte( cpu->memory, dataAddr + cpu->yIndex );
+    uint16_t dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) );
+    uint8_t data = ReadByte( cpu->memory, dataAddr + cpu->yIndex );
     AddCarryBase( cpu, data );
 }
 
-static void AddCarryBase( e6502_t *cpu, BYTE data )
+static void AddCarryBase( e6502_t *cpu, uint8_t data )
 {
-    DWORD tmp = data + cpu->accumulator + cpu->statusCarry;
+    uint32_t tmp = data + cpu->accumulator + cpu->statusCarry;
     cpu->statusZero = tmp && 0xFF;
     if( cpu->statusDec ) {
         /*Ignore decimal mode.  It's fucking gay*/
@@ -159,63 +159,63 @@ static void AddCarryBase( e6502_t *cpu, BYTE data )
 
 static void AndImm( e6502_t *cpu )
 {
-    BYTE data = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint8_t data = ReadByte( cpu->memory, cpu->pCounter++ );
     AndBase( cpu, data );
 }
 
 static void AndZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AndBase( cpu, data );
 }
 
 static void AndZpIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AndBase( cpu, data );
 }
 
 static void AndAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AndBase( cpu, data );
     cpu->pCounter += 2;
 }
 
 static void AndAbsIndexX( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AndBase( cpu, data );
     cpu->pCounter += 2;
 }
 
 static void AndAbsIndexY( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->yIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->yIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AndBase( cpu, data );
     cpu->pCounter += 2;
 }
 
 static void AndIndexInd( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     AndBase( cpu, data );
 }
 
 static void AndIndIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) );
-    BYTE data = ReadByte( cpu->memory, dataAddr + cpu->yIndex );
+    uint16_t dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) );
+    uint8_t data = ReadByte( cpu->memory, dataAddr + cpu->yIndex );
     AndBase( cpu, data );
 }
 
-static void AndBase( e6502_t *cpu, BYTE data )
+static void AndBase( e6502_t *cpu, uint8_t data )
 {
     data &= cpu->accumulator;
     cpu->statusNeg = data && 0x80;
@@ -234,8 +234,8 @@ static void ShlAcc( e6502_t *cpu )
 
 static void ShlZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     cpu->statusCarry = ( data & 0x80 ) ? 1 : 0;
     data <<= 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -245,8 +245,8 @@ static void ShlZp( e6502_t *cpu )
 
 static void ShlZpIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     cpu->statusCarry = ( data & 0x80 ) ? 1 : 0;
     data <<= 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -256,8 +256,8 @@ static void ShlZpIndex( e6502_t *cpu )
 
 static void ShlAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     cpu->statusCarry = ( data & 0x80 ) ? 1 : 0;
     data <<= 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -268,8 +268,8 @@ static void ShlAbs( e6502_t *cpu )
 
 static void ShlAbsIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     cpu->statusCarry = ( data & 0x80 ) ? 1 : 0;
     data <<= 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -289,8 +289,8 @@ static void ShrAcc( e6502_t *cpu )
 
 static void ShrZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     cpu->statusCarry = ( data & 0x1 ) ? 1 : 0;
     data >>= 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -299,8 +299,8 @@ static void ShrZp( e6502_t *cpu )
 
 static void ShrZpIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     cpu->statusCarry = ( data & 0x1 ) ? 1 : 0;
     data >>= 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -309,8 +309,8 @@ static void ShrZpIndex( e6502_t *cpu )
 
 static void ShrAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     cpu->statusCarry = ( data & 0x1 ) ? 1 : 0;
     data >>= 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -320,8 +320,8 @@ static void ShrAbs( e6502_t *cpu )
 
 static void ShrAbsIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     cpu->statusCarry = ( data & 0x1 ) ? 1 : 0;
     data >>= 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -358,19 +358,19 @@ static void BranchZero( e6502_t *cpu )
 
 static void BitTestZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     BitTestBase( cpu, data );
 }
 
 static void BitTestAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     BitTestBase( cpu, data );
 }
 
-static void BitTestBase( e6502_t *cpu, BYTE data )
+static void BitTestBase( e6502_t *cpu, uint8_t data )
 {
     cpu->statusNeg = data & 0x80;
     cpu->statusOverflow = data & 0x40;
@@ -501,7 +501,7 @@ static void CmpAccIndIndex( e6502_t *cpu )
     CmpBase( cpu, ReadByte( cpu->memory, ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) ) + cpu->yIndex ), cpu->accumulator );
 }
 
-static void CmpBase( e6502_t *cpu, BYTE data, BYTE reg )
+static void CmpBase( e6502_t *cpu, uint8_t data, uint8_t reg )
 {
     /*Compare is always a subtraction of cpu->accumulator minus data*/
     cpu->statusCarry = ( data > reg  );
@@ -544,30 +544,30 @@ static void CmpYAbs( e6502_t *cpu )
 
 static void DecrementMemZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     WriteByte( cpu->memory, dataAddr, --data );
 }
 
 static void DecrementMemZpIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     WriteByte( cpu->memory, dataAddr, --data );
 }
 
 static void DecrementMemAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     WriteByte( cpu->memory, dataAddr, --data );
     cpu->pCounter += 2;
 }
 
 static void DecrementMemAbsIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     WriteByte( cpu->memory, dataAddr, --data );
     cpu->pCounter += 2;
 }
@@ -625,7 +625,7 @@ static void XorAccMemIndIndex( e6502_t *cpu )
     XorAccMemBase( cpu, ReadByte( cpu->memory, ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) ) + cpu->yIndex ) );
 }
 
-static void XorAccMemBase( e6502_t *cpu, BYTE data )
+static void XorAccMemBase( e6502_t *cpu, uint8_t data )
 {
     data ^= cpu->accumulator;
     cpu->statusNeg = data & 0x80;
@@ -635,29 +635,29 @@ static void XorAccMemBase( e6502_t *cpu, BYTE data )
 
 static void IncrementMemZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     WriteByte( cpu->memory, dataAddr, data++ );
 }
 
 static void IncrementMemZpIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     WriteByte( cpu->memory, dataAddr, data++ );
 }
 
 static void IncrementMemAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     WriteByte( cpu->memory, dataAddr, data++ );
 }
 
 static void IncrementMemAbsIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
-    BYTE data = ReadByte( cpu->memory, dataAddr );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint8_t data = ReadByte( cpu->memory, dataAddr );
     WriteByte( cpu->memory, dataAddr, data++ );
 }
 
@@ -690,13 +690,13 @@ static void JumpSubroutine( e6502_t *cpu )
 
 #define STACK_ADDR( reg )        0x100 + reg
 
-static void StackPush( e6502_t *cpu, BYTE data )
+static void StackPush( e6502_t *cpu, uint8_t data )
 {
     WriteByte( cpu->memory, STACK_ADDR( cpu->sPointer ), data );
     cpu->sPointer--;
 }
 
-static void StackPop( e6502_t *cpu, BYTE* data )
+static void StackPop( e6502_t *cpu, uint8_t* data )
 {
     *data = ReadByte( cpu->memory, STACK_ADDR( cpu->sPointer ) );
     cpu->sPointer++;
@@ -709,50 +709,50 @@ static void LoadAccImm( e6502_t *cpu )
 
 static void LoadAccZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
     LoadAccBase( cpu, ReadByte( cpu->memory, dataAddr ) );
 }
 
 static void LoadAccZpIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
     LoadAccBase( cpu, ReadByte( cpu->memory, dataAddr ) );
 }
 
 static void LoadAccAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
     LoadAccBase( cpu, ReadByte( cpu->memory, dataAddr ) );
     cpu->pCounter += 2;
 }
 
 static void LoadAccAbsIndexX( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
     LoadAccBase( cpu, ReadByte( cpu->memory, dataAddr ) );
     cpu->pCounter += 2;
 }
 
 static void LoadAccAbsIndexY( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->yIndex;
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->yIndex;
     LoadAccBase( cpu, ReadByte( cpu->memory, dataAddr ) );
     cpu->pCounter += 2;
 }
 
 static void LoadAccIndexInd( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex );
+    uint16_t dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex );
     LoadAccBase( cpu, ReadByte( cpu->memory, dataAddr ) );
 }
 
 static void LoadAccIndIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) ) + cpu->yIndex;
+    uint16_t dataAddr = ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) ) + cpu->yIndex;
     LoadAccBase( cpu, ReadByte( cpu->memory, dataAddr ) );
 }
 
-static void LoadAccBase( e6502_t *cpu, BYTE data )
+static void LoadAccBase( e6502_t *cpu, uint8_t data )
 {
     cpu->statusZero = ( data ) ? 0 : 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -786,7 +786,7 @@ static void LoadXAbsIndex( e6502_t *cpu )
     cpu->pCounter += 2;
 }
 
-static void LoadXBase( e6502_t *cpu, BYTE data )
+static void LoadXBase( e6502_t *cpu, uint8_t data )
 {
     cpu->statusZero = ( data ) ? 0 : 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -820,7 +820,7 @@ static void LoadYAbsIndex( e6502_t *cpu )
     cpu->pCounter += 2;
 }
 
-static void LoadYBase( e6502_t *cpu, BYTE data )
+static void LoadYBase( e6502_t *cpu, uint8_t data )
 {
     cpu->statusZero = ( data ) ? 0 : 1;
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0;
@@ -876,9 +876,9 @@ static void OrAccMemIndIndex( e6502_t *cpu )
     OrAccMemBase( cpu, ReadByte( cpu->memory, ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) ) + cpu->yIndex ) );
 }
 
-static void OrAccMemBase( e6502_t *cpu, BYTE data )
+static void OrAccMemBase( e6502_t *cpu, uint8_t data )
 {
-    BYTE tmp = data | cpu->accumulator;
+    uint8_t tmp = data | cpu->accumulator;
     cpu->statusNeg = ( tmp & 0x80 ) ? 1 : 0;
     cpu->statusZero = ( tmp ) ? 0 : 1;
     cpu->accumulator = tmp;
@@ -905,13 +905,13 @@ static void PopAcc( e6502_t *cpu )
 
 /*static void PopProgramCounter( e6502_t *cpu )
 {
-	StackPop( cpu, (BYTE*)&cpu->pCounter );
-	StackPop( cpu, (BYTE*)&cpu->pCounter+1 );
+	StackPop( cpu, (uint8_t*)&cpu->pCounter );
+	StackPop( cpu, (uint8_t*)&cpu->pCounter+1 );
 }*/
 
 static void RotateLeftAcc( e6502_t *cpu )
 {
-    WORD tmp = cpu->accumulator << 1;
+    uint16_t tmp = cpu->accumulator << 1;
     tmp |= ( cpu->statusCarry ) ? 1 : 0;
     cpu->statusCarry = ( tmp > 0xFF ) ? 1 : 0;
     tmp &= 0xFF;
@@ -923,33 +923,33 @@ static void RotateLeftAcc( e6502_t *cpu )
 
 static void RotateLeftZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
     RotateLeftBase( cpu, dataAddr, ReadByte( cpu->memory, dataAddr ) );
 }
 
 static void RotateLeftZpIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
     RotateLeftBase( cpu, dataAddr, ReadByte( cpu->memory, dataAddr ) );
 }
 
 static void RotateLeftAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
     RotateLeftBase( cpu, dataAddr, ReadByte( cpu->memory, dataAddr ) );
     cpu->pCounter += 2;
 }
 
 static void RotateLeftAbsIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
     RotateLeftBase( cpu, dataAddr, ReadByte( cpu->memory, dataAddr ) );
     cpu->pCounter += 2;
 }
 
-static void RotateLeftBase( e6502_t *cpu, WORD dataAddr, BYTE data )
+static void RotateLeftBase( e6502_t *cpu, uint16_t dataAddr, uint8_t data )
 {
-    WORD tmp = data << 1;
+    uint16_t tmp = data << 1;
     tmp |= ( cpu->statusCarry ) ? 1 : 0;
     cpu->statusCarry = ( tmp > 0xFF ) ? 1 : 0;
     tmp &= 0xFF;
@@ -960,7 +960,7 @@ static void RotateLeftBase( e6502_t *cpu, WORD dataAddr, BYTE data )
 
 static void RotateRightAcc( e6502_t *cpu )
 {
-    WORD tmp = cpu->accumulator | ( cpu->statusCarry ) ? 0x100 : 0;
+    uint16_t tmp = cpu->accumulator | ( cpu->statusCarry ) ? 0x100 : 0;
     cpu->statusCarry = ( tmp & 0x1 ) ? 1 : 0;
     tmp >>= 1;
     cpu->statusNeg = ( tmp & 0x80 ) ? 1 : 0;
@@ -971,33 +971,33 @@ static void RotateRightAcc( e6502_t *cpu )
 
 static void RotateRightZp( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ );
     RotateRightBase( cpu, dataAddr, ReadByte( cpu->memory, dataAddr ) );
 }
 
 static void RotateRightZpIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
+    uint16_t dataAddr = ReadByte( cpu->memory, cpu->pCounter++ ) + cpu->xIndex;
     RotateRightBase( cpu, dataAddr, ReadByte( cpu->memory, dataAddr ) );
 }
 
 static void RotateRightAbs( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter );
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter );
     RotateRightBase( cpu, dataAddr, ReadByte( cpu->memory, dataAddr ) );
     cpu->pCounter += 2;
 }
 
 static void RotateRightAbsIndex( e6502_t *cpu )
 {
-    WORD dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
+    uint16_t dataAddr = ReadWord( cpu->memory, cpu->pCounter ) + cpu->xIndex;
     RotateRightBase( cpu, dataAddr, ReadByte( cpu->memory, dataAddr ) );
     cpu->pCounter += 2;
 }
 
-static void RotateRightBase( e6502_t *cpu, WORD dataAddr, BYTE data )
+static void RotateRightBase( e6502_t *cpu, uint16_t dataAddr, uint8_t data )
 {
-    WORD tmp = data | ( cpu->statusCarry ) ? 0x100 : 0;
+    uint16_t tmp = data | ( cpu->statusCarry ) ? 0x100 : 0;
     cpu->statusCarry = ( tmp & 0x1 ) ? 1 : 0;
     tmp >>= 1;
     cpu->statusNeg = ( tmp & 0x80 ) ? 1 : 0;
@@ -1011,13 +1011,13 @@ static void ReturnInterrupt( e6502_t *cpu )
     PopStatus( cpu );
 
     /* Pop the return address */
-    StackPop( cpu, (BYTE*)&cpu->pCounter+1 );
-    StackPop( cpu, (BYTE*)&cpu->pCounter );
+    StackPop( cpu, (uint8_t*)&cpu->pCounter+1 );
+    StackPop( cpu, (uint8_t*)&cpu->pCounter );
 }
 
 static void ReturnSubroutine( e6502_t *cpu )
 {
-    BYTE hi, lo;
+    uint8_t hi, lo;
     StackPop( cpu, &lo );
     StackPop( cpu, &hi );
     cpu->pCounter = ( hi << 8 ) + lo;		/*Is adding one needed?  What did we push onto the stack?*/
@@ -1066,9 +1066,9 @@ static void SubtractAccMemIndIndex( e6502_t *cpu )
     SubtractAccMemBase( cpu, ReadByte( cpu->memory, ReadWord( cpu->memory, ReadByte( cpu->memory, cpu->pCounter++ ) ) + cpu->yIndex ) );
 }
 
-static void SubtractAccMemBase( e6502_t *cpu, BYTE data )
+static void SubtractAccMemBase( e6502_t *cpu, uint8_t data )
 {
-    WORD tmp = cpu->accumulator - data - cpu->statusCarry;
+    uint16_t tmp = cpu->accumulator - data - cpu->statusCarry;
     cpu->statusNeg = ( tmp & 0x80 ) ? 1 : 0;
     cpu->statusZero = ( tmp ) ? 0 : 1;
     cpu->statusOverflow = ( ((cpu->accumulator ^ tmp) & 0x80) && ((cpu->accumulator ^ data) & 0x80) ) ? 1 : 0;		/*I hate this thing*/
@@ -1197,7 +1197,7 @@ static void TransferYToAcc( e6502_t *cpu )
     TransferBase( cpu, &cpu->accumulator, cpu->yIndex );
 }
 
-static void TransferBase( e6502_t *cpu, BYTE* dataDest, BYTE data )
+static void TransferBase( e6502_t *cpu, uint8_t* dataDest, uint8_t data )
 {
     cpu->statusNeg = ( data & 0x80 ) ? 1 : 0 ;
     cpu->statusZero = ( data ) ? 0 : 1;
