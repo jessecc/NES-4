@@ -22,7 +22,6 @@ typedef struct arg_s
 typedef struct Emulator { 
 	e6502_t *Cpus;
 
-	BYTE *ram;
 	unsigned int ramSize;
 	unsigned int cpuNo;
 

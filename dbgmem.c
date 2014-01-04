@@ -12,7 +12,8 @@ int bfid_peek( Emulator_t *dem, int argc, char **argv ){
 		return 3;
 	}
 
-	return dem->ram[ where ]; 
+	//return dem->ram[ where ]; 
+	return ReadByte( dem->Cpus[0].memory, where ); 
 }
 
 int bfid_poke( Emulator_t *dem, int argc, char **argv ){
@@ -30,8 +31,8 @@ int bfid_poke( Emulator_t *dem, int argc, char **argv ){
 		return 3;
 	}
 
-	dem->ram[ where ] = val;
-
+	//dem->ram[ where ] = val;
+	WriteByte( dem->Cpus[0].memory, where );
 	return 0;
 }
 

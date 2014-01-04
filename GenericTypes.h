@@ -46,7 +46,7 @@ typedef struct e6502
 	FLAG	statusOverflow	:1;
 	FLAG	statusNeg		:1;
 	
-	minterface_t memory;
+	minterface_t *memory;
 } e6502_t;
 
 #endif

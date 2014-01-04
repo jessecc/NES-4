@@ -31,7 +31,8 @@ int dbg_printmem( Emulator_t *dem, int argc, char **argv ){
 		if ( !(( i - addr ) % 8 ))
 			printf( "  " );
 
-		printf( fmt, dem->ram[ i ] );
+		//printf( fmt, dem->ram[ i ] );
+		printf( fmt, ReadByte( dem->Cpus[0].memory, i ));
 	}
 
 	printf( "\n" );

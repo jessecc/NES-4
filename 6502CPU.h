@@ -11,7 +11,7 @@
 #define ABT_LEVEL			0x04
 
 
-unsigned int CPUInit( unsigned char* ramPtr );
+unsigned int CPUInit( minterface_t *ramPtr );
 void CPUFetch( e6502_t *cpu, unsigned char* opcode );
 void CPUDecode( unsigned char opcode, short* funcIndex );
 void CPUExecute( e6502_t *cpu, unsigned char opcode );

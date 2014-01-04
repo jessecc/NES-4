@@ -67,7 +67,8 @@ int bf_debugger( Emulator_t *em ){
 						interrupted = broke = 1;
 
 					} else if ( 	temp->type == BRK_INSTR && 
-							temp->val == dem->Cpus[i].memory[ dem->Cpus[i].pCounter ]){
+							//temp->val == dem->Cpus[i].memory[ dem->Cpus[i].pCounter ]){
+							temp->val == ReadByte( dem->Cpus[i].memory, dem->Cpus[i].pCounter )){
 
 						interrupted = broke = 1;
 					}

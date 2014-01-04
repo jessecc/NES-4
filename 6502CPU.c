@@ -1255,7 +1255,7 @@ void (*FunctionTable[0x100])() =
 /*F*/BranchZero,        SubtractAccMemIndIndex, UndocOp,  UndocOp, UndocOp,       SubtractAccMemZpIndex, IncrementMemZpIndex, UndocOp,           SetDecimal,          SubtractAccMemAbsIndexY, UndocOp,          UndocOp,    UndocOp,       SubtractAccMemAbsIndexX, IncrementMemAbsIndex, UndocOp
 };
 
-unsigned int CPUInit( unsigned char* ramPtr )
+unsigned int CPUInit( minterface_t *ramPtr )
 {
 	return ERROR_SUCCESS;
 }

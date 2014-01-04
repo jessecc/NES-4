@@ -10,15 +10,18 @@
 #include "GenericTypes.h"
 #include "Error.h"
 #include "Debug.h"
+#include "MemoryInterface.h"
 
 /*Defines and defaults*/
-#define DEFAULT_RAM_SIZE	0x1000	//4K of RAM
+#define DEFAULT_RAM_SIZE	0xffff	//4K of RAM
 #define RAM_SIZE_MAX		0xFFFF	//64K RAM
 #define NUM_CYCLES		100	//This is just a guess.  I have no idea how many I should actually execute
 
 unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 {
-	BYTE *ram;
+	//BYTE *ram;
+	minterface_t *ram;
+	
 	int i;
    long int romSize;
 	FILE *fp = NULL;
@@ -30,13 +33,17 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 		args->ramSize = DEFAULT_RAM_SIZE;
 	}
 
-	ram = new( BYTE[ args->ramSize ]);
+	//ram = new( BYTE[ args->ramSize ]);
+	ram = new( minterface_t );
 
 	if( !ram )
 	{
 		SetError( FATAL_LEVEL, ERROR_NOMEM );
 		return 1;
 	}
+	ram->memory = new( BYTE[ args->ramSize ]);
+	ram->map = map_nes;
+	//printf( "[EmulationInit] ram->memory: 0x%x\n", ram->memory );
 
 	if( CPUInit( ram ) != ERROR_SUCCESS )
 	{
@@ -49,11 +56,12 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
 		return 1;
 	}
 
-	fread( ram + args->offset, args->ramSize - args->offset, 1, fp );
+	// read input file into emulator's ram
+	fread( ram->memory + args->offset, args->ramSize - args->offset, 1, fp );
 
 	// Initialize emulator structure
 	em->ramSize = args->ramSize;
-	em->ram = ram;
+	//em->ram = ram;
 	em->filename = strdup( args->filename );
 	em->fp = fp;
 
@@ -63,8 +71,13 @@ unsigned int EmulationInit( struct arg_s *args, Emulator_t *em )
       return ERROR_NOMEM;
    }
 	em->cpuNo = args->cpuNo;
-	for ( i = 0; i < args->cpuNo; i++ )
+	for ( i = 0; i < args->cpuNo; i++ ){
 		em->Cpus[i].memory = ram;
+		/*
+		printf( "[EmulationInit] cpu %d->memory: 0x%x, cpu %d->memory->memory: 0x%x\n",
+				i, em->Cpus[i].memory, i, em->Cpus[i].memory->memory );
+				*/
+	}
 
 	em->Devices = NULL;
 	em->Debugging = args->debugEnable;
@@ -106,7 +119,7 @@ unsigned int EmulationCleanup( Emulator_t *em )
 {
 	/*Free dat rams and such*/
 
-	free( em->ram );
+	//free( em->ram );
 	free( em );
 
 	/*Do other cleanup*/

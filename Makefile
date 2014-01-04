@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=
+CFLAGS= -g
 FINALBIN=NES
 
 all: makestuff
